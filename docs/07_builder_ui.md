@@ -74,8 +74,8 @@ Create／Edit 可選用全域模板，設定 Import 入口欄位及參數，再�
 以下涵蓋已確認的使用者要求及既有 Prototype 行為（確認決策見 [計畫與決策](08_plan_and_decisions.md#3-已確認方向與保留基線)）；不將明確要求重新列為是否需要的待決項目：
 
 - Parsing 初始只顯示「結構化 JSON」；其他格式及所有相關設定集中在預設關閉的「進階選項」，展開才出現。正式 Parser 能力另依 Q-005，顯示選項不等於可執行。
-- D-67：由 Parser Descriptor＋Config 推導 Unit／metadata 細節，再沿 Pipeline 提供下游選項與卡控；多分支須保留可用性，缺欄位不靜默替換。詳細規則見 [Descriptor](04_component_descriptor.md)，UI 待辦 UIB-024。
-- 2026-10-16 已確認：Indexing 預設保存全部 Document.structdata／metadata，移除「儲存內容」選單，只選全文／向量索引與可過濾欄位；Chunking 預設繼承全部合法 metadata，第一版不新增排除表單。Prototype v0.12 已有上述保存／繼承互動，見 Builder UI／Backlog手冊 的 UIB-005／006；真實儲存 Adapter 尚待實作。
+- D-67：由 Import、Parser Descriptor 與 Config 推導 structdata，再沿 Pipeline 提供下游選項與卡控；多分支須保留可用性，缺欄位不靜默替換。詳細規則見 [Descriptor](04_component_descriptor.md)，UI 待辦 UIB-024。
+- Indexing 保存全部 Document.structdata／metadata。全文與 Filter 選項沿用 structdata 欄位宣告，Indexing 可覆寫；另選向量欄位。Chunking 整包繼承 metadata。Prototype v0.12 有保存／繼承互動，見 UIB-005／006；有效欄位推導及實際儲存 Adapter 另做整合驗收。
 - LLM 服務集中管理；Rewrite 以下拉選擇 System 已設定的服務。
 - Rewrite 提供一份可編輯 Prompt、改寫數量與原始問題開關，並提供變數插入、驗證及預覽。
 - Rerank 可查看固定平台 Request／Response 範例及 index／score 對應說明；不宣稱是所有模型的統一標準。
@@ -86,14 +86,14 @@ Create／Edit 可選用全域模板，設定 Import 入口欄位及參數，再�
 
 | 區塊 | 基本預設呈現 | 展開進階呈現 |
 |---|---|---|
-| Parser 資料規格（D-67 目標） | 顯示當前輸入／輸出欄位摘要；不重填固定輸出 | 僅當 Parser 開放時設定欄位定義／映射及 metadata 限制；Schema 正式語法待核定 |
+| Parser 資料規格（D-67 目標） | 顯示當前輸入／輸出欄位摘要；不重填固定輸出 | 僅當 Parser 開放時設定欄位定義與映射，沿用 [Data Meta Schema](02_data_contracts.md#data-meta-schema) |
 | 服務 | DEV／自行提供、必要 URL／模型／認證引用 | Timeout、精確 Profile／Tokenizer 等 |
 | Parsing（已確認） | 只顯示結構化 JSON | 其他格式及相關設定全部收在預設關閉進階區 |
 | Chunking（欄位簡化已確認） | 切分方式／必要參數，直接用 text；不顯示切分／複製欄位選單，metadata 全繼承 | 單一切分來源、輸出名稱、可選複製欄位及完整原文保留。依方法顯示 Token、分隔符／標題層級設定。見 UIB-013。 |
 | Embedding | 來源欄位、輸出向量、模型 | 維度／Encoding／Normalization、Batch、輸入限制 |
 | Indexing | 後端、全文／向量欄位、過濾能力；全部內容自動保存的摘要 | 後端特有參數、進階 Mapping（支援後才顯示）；不要求再勾選保存內容 |
 | Query Transformation | None／Rewrite／Remote API；Rewrite 選共用 LLM 並設定改寫數量 | Prompt、include_original；可能產生多 Query 時設定跨 Query 融合 |
-| Retrieval／Fusion Plan | 全文／向量欄位、`per_route_k`、預設 filters、多路搜尋時選 RRF 或 Sum Score | 可選當步分組及 Retrieval Top N。跨 Query 規則由 Query Transformation 設定。 |
+| Retrieval／Fusion Plan | 全文／向量欄位、`per_route_k`、選填固定 Filter、多路搜尋時選 RRF 或 Sum Score | 可選當步分組及 Retrieval Top N。跨 Query 規則由 Query Transformation 設定。 |
 | Rerank | None／服務、單一評分內容欄位、Rerank Top N（原型預設 3）、實際提問來源 | 當步分組、逐 Query 問題選擇、附加內容欄位、Timeout／服務輸入限制 |
 
 必填但缺失的設定不能因進階區收合而無法發現；錯誤摘要可直接展開並定位。改動過的進階設定收起後，建議顯示已修改項數／簡短摘要。範圍、預設值及「每次記住展開」政策見 Q-025。
@@ -123,7 +123,7 @@ Admin 在 Builder 以外維護版本化全域模板。Builder 顯示可選版本
 - Local Search 選 MongoDB 才呈現 DB 連線；Memory 不要求資料庫。
 - Query Transformation 只選 llm_ref；共用服務只管理一次。
 - None 的 Top-N／Prompt 等欄位可保留草稿但停用，不參與有效 Config 驗證／匯出。
-- 上游刪欄位或模型引用失效：保留失效選擇、標示原因、阻止儲存；不自動選另一值。
+- 上游刪除欄位或模型引用失效時，保留草稿選擇、標示原因並阻擋發布。
 - 不支援能力顯示且停用，附可理解原因；不能讓顯示的 Mock 選項假裝正式可用。
 - 前端 Validator 提供即時回饋，Backend／Engine 仍重新驗證。Schema 及規則來源需共用或由後端產生，避免手寫三份不同規則。
 - Component 目錄／Config Schema 與驗證結果綁定目標 Runtime 版本；目錄變動不靜默升級既有 System 或覆寫草稿。API／Schema 與既有控制項相容時，新增 Component 可在 Runtime 更新後供原版 Builder 選用；未知控制項／不相容格式明示需支援，不假裝可完整設定。目錄快取與版本協調見 07，畫面待辦見 Builder UI／Backlog手冊 UIB-010。
@@ -135,16 +135,17 @@ Admin 在 Builder 以外維護版本化全域模板。Builder 顯示可選版本
 | 上游條件 | 下游呈現與驗證 |
 |---|---|
 | Indexing 選 ES／Local Search | Retrieval 顯示繼承的後端資訊，不增加 Implementation 選單 |
-| 欄位未建立全文／向量索引 | 對應搜尋選項顯示且停用，說明需先在 Indexing 建立能力；既有選擇失效則保留錯誤並阻止保存 |
+| 欄位未建立全文／向量索引 | 對應搜尋選項顯示且停用，說明需先在 Indexing 建立能力；既有選擇失效則保留草稿並阻擋發布 |
 | Embedding 移除某個 output_name | Indexing／Retrieval 的向量引用標為失效，不默默改為其他向量或欄位 |
 | 欄位未建立全文／向量索引，但已存在於 Chunk | 仍可用於 Rerank／檢索結果消費端 等內容消費；只有相對應的搜尋能力不能選，不能以「未勾儲存」拒絕 |
-| metadata 已繼承／保存但未宣告可過濾 | 保留內容，Filter 選單停用該欄位並說明要先在 Indexing 啟用；不自動索引全部 metadata |
+| structdata 欄位的有效 filterable 為 false | 保留內容，欄位無法選為固定或動態 Filter。已存在的固定 Filter 標示失效並阻擋發布 |
+| metadata | 整包顯示與保存，欄位選單使用有效 structdata |
 | Chunking 選 Fixed-size（待實作） | Token Size／Overlap／Tokenizer 有效；分隔符／keep_separator／標題層級不生效且保留草稿，不要求 Parsing headings |
 | Header-aware 所需標題能力未開啟 | 顯示相依原因，提供定位 Parsing 進階設定的方式；無法滿足時阻止保存 |
 
 卡控只處理設定相依；不代替實際後端能力、Profile 或連線驗證。規則由 Engine／Component 開發手冊／資料契約手冊 共用來源推導。
 
-2026-10-28 D-42 將動態 Component 表單列為已確認規劃方向，描述／規則草案與案例集中於 [Descriptor](04_component_descriptor.md)。Create／Edit 保持固定介面，Component 參數才依 Schema 產生；無關分支欄位隱藏，進階預設收合，不相容選項顯示且停用。上游變更使已選值失效時保留並標錯，可以繼續編輯，但正式儲存／建立／套用需通過 Engine 驗證；草稿持久化仍依 Q-016／Q-025。
+2026-10-28 D-42 將動態 Component 表單列為已確認規劃方向，描述／規則草案與案例集中於 [Descriptor](04_component_descriptor.md)。Create／Edit 保持固定介面，Component 參數才依 Schema 產生；無關分支欄位隱藏，進階預設收合，不相容選項顯示且停用。上游變更使已選值失效時保留並標錯，可以繼續編輯，但發布／建立有效版本／套用需通過 Engine 驗證；草稿持久化仍依 Q-016／Q-025。
 
 動態候選使用目前有效欄位／服務／索引能力，前端不自行指定可信 Context。多個相同 Module 的錯誤以 node_ref＋欄位路徑定位。未知必要 UI feature 明示不支援且不能套用不完整設定；不自動改為任意 JSON 編輯器。實作與 SUI-01～14 互動驗收記在 10 UIB-010；v0.12 僅完成簡單模擬表單，正式協定驗收仍待整合。
 
@@ -178,7 +179,12 @@ Inference 顯示 QueryContext[] 中的目前 ResultSets／ResultItems、依序�
 A. 先 Create Config，之後 Ingest 上傳 CSV 並映射。
 B. 先上傳 CSV 樣本，描述用途／問題範例，AI 提出 Schema、映射及 Pipeline 草稿，使用者確認後建立 System。
 
-CSV 每 row 對應一份 Document，不把每個 column 當文件。需要以多列合併文件的能力尚未定案，見 Q-007／Q-025。
+CSV 每 row 對應一份 Document。需要以多列合併文件的能力尚未定案，見 Q-007／Q-025。
+
+<a id="builder-csv-replacement"></a>
+### CSV 整批替換
+
+Builder 的 CSV 資料上傳以目標 System 的索引資料為替換範圍。先完成整份 CSV 的解析及映射預檢，再清除該 System 的既有索引資料，將新 CSV 的所有列重新匯入。每列 ID 需在本次資料集中唯一。清除及重送的具體 API、失敗處理和 CSV ID 生成由 Builder 後續規劃。
 
 <a id="src-06-42-映射與預覽"></a>
 ### 映射與預覽
@@ -190,7 +196,7 @@ CSV 每 row 對應一份 Document，不把每個 column 當文件。需要以多
 | 映射 | 可將同一 column 填入多個目標；未映射欄位不送出 |
 | 必填 | 無預設值的 input 必填欄位須映射 |
 | 型別 | number 有限值；boolean 規則明確；array 用 JSON 解析；正式強制轉型政策 Q-002 |
-| ID | 優先映射穩定鍵；自動 ID 的跨批更新限制要明示 |
+| ID | 可映射來源主鍵；整批替換時須確保本次資料集的文件 ID 唯一，自動 ID 生成方式待定 |
 | 預覽 | 原始列 → 批次 Request → 各階段 Document；標示實際解析或模擬，錯誤對應列號／模組／欄位 |
 | 保存 | 成功後保存映射；是否成為執行 Config Revision 的一部分見 Q-015 |
 
@@ -242,13 +248,18 @@ Prototype 限制 ≤1 MB 且在瀏覽器讀取，不等於正式產品限制。�
 
 問題＋本次 filters → 呼叫相同 Runtime API → 排序的檢索清單及來源。基礎結果簡潔呈現；詳細資訊按需展開。
 
+<a id="builder-initial-ingestion-readiness"></a>
+### 初次匯入與查詢入口
+
+Builder 對新建立或清空後重新建置的資料集，等預定的初次資料全部匯入成功且可搜尋後才開放查詢。若初次匯入有失敗文件，仍等待補齊。之後一般新增或逐文件更新不關閉查詢入口。Runtime 的 Inference API 依索引與查詢依賴的就緒狀態服務，索引可查時接受空索引查詢。
+
 | 層級 | 建議呈現 |
 |---|---|
 | 基本 | 檢索內容、分數／排名／來源、索引未就緒／服務錯誤 |
 | 進階 | 原始與衍生 Query、各路候選、融合結果、Rerank 前後、實際 Context、耗時／用量 |
 | 版本 | config_revision、index_generation、request_id；不可顯示為另一版的結果 |
 
-Trace 保存與敏感內容政策見 Q-016；診斷顯示範圍 Q-025。Filter 預設條件與本次附加條件要區分，空清單不能取消後端 ACL。API 說明隨時可查看，不需先 Ingestion。Ingest／Inference 皆有「查看 API 端點」入口，內容包含當前 Base URL、認證示意、JSON／multipart、cURL、回應與錯誤；Ingest 另示範 run_id 輪詢。查看說明不執行工作或模型／DB 測試。
+Trace 保存與敏感內容政策見 Q-016，診斷顯示範圍見 Q-025。Filter 表單分別顯示固定條件與本次附加條件，日期時間預設顯示 Asia/Taipei。Inference 執行失敗時顯示 Runtime 的錯誤，成功但無候選時顯示無命中。API 說明隨時可查看，不需先 Ingestion。Ingest／Inference 皆有「查看 API 端點」入口，內容包含當前 Base URL、認證示意、JSON／multipart、cURL、回應與錯誤；Ingest 另示範 run_id 輪詢。查看說明不執行工作或模型／DB 測試。
 
 <a id="src-06-7-evaluation-與-edit-config"></a>
 ## Evaluation 與 Edit Config
@@ -267,12 +278,12 @@ Comparison、門檻與 Release Gate 為 Q-018；UI 不自行認定所有測試�
 
 | 變更 | 使用者看到的結果 |
 |---|---|
-| Ingestion 邏輯配置／Schema | 新 Config Revision，需要重新 Ingestion |
+| Ingestion 邏輯配置／Schema 變更使索引不相容 | 套用新 Config Revision 會清除舊索引資料；建好新索引後由 Builder 使用保存的原始資料重新 Ingestion。 |
 | 部署資料目標 | 同版 Config，部署綁定改變；需驗證目標資料或 Ingestion |
 | Inference 配置 | 不需重匯；需重新測試／評估 |
 | 顯示名稱／未啟用草稿 | 不更換實體 collection，不誤判需重建 |
 
-Runtime 的新舊 Revision／Index 發布策略見 Q-010／Q-015；UI 不單靠本機 boolean 決定正式可查詢狀態。
+Runtime 的新舊 Revision／Index 發布策略見 Q-010／Q-015。原始資料與重匯入的管理流程由 Builder 後續規劃，見 [Q-016](08_plan_and_decisions.md#q-016)。UI 依 Runtime 狀態呈現正式可查詢狀態。
 
 <a id="src-06-8-export-與部署說明"></a>
 ## Export 與部署說明
@@ -424,7 +435,7 @@ ResultSet.key 對應 Config 路徑／群組；items 位置即名次。RRF 可用
 
 內建預覽預設沒有 _rag，不以缺少 source_refs／fingerprint／ordinal 阻擋儲存或執行。Component 未提供來源就不捏造。Chunk.metadata._rag 保留為選填擴充；ResultItem 不另帶分數血緣，流程診斷交 Logs。
 
-內建 Chunker 的示例可讀 metadata.chunking_mode="passthrough"，逐 Unit／task 完整轉 Chunk；預設無提示時正常切分。由 CSV 映射或 JSON Document 傳入 metadata。這不是任意 Config／ACL 覆寫；其他 Component 的支援由其宣告決定。
+舊原型曾用 metadata.chunking_mode 示範逐 Unit 直通。正式設計的 Chunking 行為由 Component 設定控制，Document.metadata 只攜帶附帶資訊。
 
 <a id="uib-018-embedding-composition"></a>
 <a id="src-10-6-欄位組合與原文-chunk"></a>
@@ -490,7 +501,7 @@ ResultSet.key 對應 Config 路徑／群組；items 位置即名次。RRF 可用
 <a id="src-10-d-60讀寫並行與暫定驗證方式補充"></a>
 ### D-60：讀寫並行與暫定驗證方式補充
 
-- [ ] 不因有 Ingestion／retire 寫入就禁用 Inference 或顯示等待讀寫鎖；索引實際未就緒／限流／錯誤仍按 Runtime 回應呈現。
+- [ ] 初次資料依 [查詢入口規則](#builder-initial-ingestion-readiness)開放。後續一般 Ingestion／retire 與查詢併行；索引未就緒、限流或錯誤依 Runtime 回應呈現。
 - [ ] API 說明暫採單一 Basic 帳密操作全部 Runtime API，憑證不寫進業務 payload；不因此新增 Builder 登入或角色權限 UI。
 - [ ] 更新期間 Query 可反映不同時點的資料，不在 UI 宣稱原子快照；同文件 queued／running 重複提交仍保留忙碌提示。
 
@@ -535,7 +546,7 @@ ResultSet.key 對應 Config 路徑／群組；items 位置即名次。RRF 可用
 2. **Embedding** 保留 `page` 供查看，但停用其來源選項；映射 `body_text → body_vec` 時，輸出規格仍有三個原欄位，另有向量來源、測試 Profile 與維度。
 3. 回到 **Chunking** 把切片輸出名稱改成 `content`。儲存會被阻止；點底部驗證訊息可聚焦到失效的 Embedding 映射。修正 Embedding 的來源後，原本的 `body_vec` 向量索引選擇可沿用，仍引用 `body_text` 的全文搜尋與評分欄位則需修正。
 
-Create／Edit 直接從 Parsing 開始。內建 Parser 的欄位和 metadata 在進階參數內調整，固定輸出服務只顯示宣告。下游依單欄位 Chunking 的切分輸出與複製欄位推導選項。AI 建議更新 Parser 參數，CSV 從 Parser 輸入取得映射目標，Export 將欄位宣告放在 Parsing 的設定內。
+Create／Edit 從 Data Import 宣告原始 structdata 與 CSV 映射。Parser 設定按 Component 顯示輸出，保留欄位繼承上游宣告。下游依單欄位 Chunking 的切分輸出與複製欄位推導選項。AI 可建議 Import 映射與 Parser 參數。Export 依 [System Config](05_system_config.md#data-schema-config) 保存各階段宣告及 Indexing 覆寫。
 
 尚待正式整合：
 
