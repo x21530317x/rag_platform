@@ -14,9 +14,11 @@ User 提供已部署的 HTTP 服務並在 System 設定完整 Endpoint、認證�
 | Ingestion | Parsing、Chunking、Embedding 各自可替換，也可選 Parsing → Chunking、Chunking → Embedding、Parsing → Chunking → Embedding | 從 Parsing 開始時 input 是單筆 Document，其餘為同文件 Document[]。output 為 Document[]。涵蓋 Parsing／Chunking 時宣告輸出 structdata，涵蓋 Embedding 時宣告 vectors。 |
 | Inference | Query Transformation、Retrieval、Rerank 各自可替換，也可選 Transformation → Retrieval、Retrieval → Rerank、Transformation → Retrieval → Rerank | input／output 皆為 QueryContext[]，候選 Document 遵守從 Ingestion 設定推導的 System Schema。 |
 
+Remote Ingestion 的 `output` 在 Config 中是 Schema 宣告，在 HTTP Response 中是實際 Document 陣列。涵蓋 Parsing 或 Chunking 時，Config 宣告 `output.structdata`。涵蓋 Embedding 時宣告 `output.vectors`，每個向量列出 `source_field`（有效必填字串欄名）、`embedding_profile_id` 及 `dimensions`。同時涵蓋兩類時需要兩份宣告。見 [System Config 欄位](05_system_config.md#config-fields) 與 [Remote API 範例](../examples/user_remote_api/README.md)。
+
 區段只執行一次，涵蓋模組由首節點管理，編譯拒絕重疊。Indexing 與 Inference Input 由平台執行。只替換 Embedding 時，輸出保留原 Document 並附上向量。外部 Retrieval 自行執行搜尋及授權，平台無須等 Ingestion／IndexBinding 就緒。當區段涵蓋 Retrieval，Engine 以共用 I/O 傳入已驗證、合併後的 QueryContext.filters，並驗證回傳候選。過濾、排序及截斷由外部服務決定。未被替換的後段使用驗證過的候選。Inference 區段內的融合、分組和截斷由 Remote 負責，Engine 驗證平台規則與區段不重疊。Remote Retrieval 若留下可識別的 Query／ResultSet，區段外可顯式接平台跨 Query 處理或內建 Rerank。整段 Query Transformation → Rerank 由 Remote 執行時，Runtime 驗證回應及候選契約，按回傳順序交付。平台保留內建擴充的能力，由平台團隊維護方法及相容契約。
 
-呼叫前解析 `{{params.name}}` 與固定／動態 Secret reference。實際 Secret 經授權解析後放認證 Header。檢查回應形狀、欄位型別、資料識別、向量維度／Profile 與 Inference 邊界語意。HTTP 錯誤、Timeout、無效 JSON、違反契約及查無候選分別處理。服務失敗的重試依操作冪等性及 Runtime 政策。保留 request ID、模組範圍與錯誤摘要，遮罩憑證。
+業務參數引用 `{{name}}` 優先取本次已驗證的 Request 參數，缺值時使用 System Secret 的同名一般設定。Remote 認證可填 `auth.bearer_token: "{{KEY}}"`。Adapter 在呼叫時取用 System 啟動時載入的 Secret，並組出 `Authorization: Bearer …`。內建 Component 也可使用同一份 System 級 [Secret](05_system_config.md#system-secret)。檢查回應形狀、欄位型別、資料識別、向量維度／Profile 與 Inference 邊界語意。HTTP 錯誤、Timeout、無效 JSON、違反契約及查無候選分別處理。服務失敗的重試依操作冪等性及 Runtime 政策。保留 request ID、模組範圍與錯誤摘要，遮罩憑證。
 
 ## Ingestion 模組
 
@@ -26,7 +28,7 @@ User 提供已部署的 HTTP 服務並在 System 設定完整 Endpoint、認證�
 
 ### Parsing
 
-依 System 選定一種內建檔案解析方法或 Remote。結構化資料可直傳，檔案來源依 content 讀取。內建解析保留原始欄位並新增 contenttext，每個解析單位是一筆 Document。解析輸出需保留 document_id 與來源版本，來源位置選填。
+依 System 選定一種內建檔案解析方法或 Remote。結構化資料可直傳，檔案來源依 content 讀取。內建解析保留原始欄位並新增 contenttext，每個解析單位是一筆 Document。解析輸出需保留 `document_id`。入口帶 `source_revision` 時原樣傳遞，省略時維持省略。來源位置選填。
 
 ### Chunking
 
@@ -36,9 +38,9 @@ User 提供已部署的 HTTP 服務並在 System 設定完整 Endpoint、認證�
 
 | 方法 | 切分依據 | 有效設定 |
 |---|---|---|
-| Fixed-size | 按固定 Token 視窗前進，不依句子、分隔符或標題找邊界 | size、overlap、tokenizer；共用 split／copy，metadata 預設全部繼承 |
-| Recursive | 依分隔符優先序找邊界，過長片段繼續細切 | 共用設定＋separators、keep_separator |
-| Header-aware | 先依標題層級切分，超長章節再用 Recursive | 共用設定＋header_levels、標題能力及 Recursive 備援參數 |
+| Fixed-size | 按固定 Token 視窗切分 | `max_tokens`、`overlap_tokens`、`tokenizer_profile_id`，共用 `split_field`、`output_field`、`copy_fields`。 |
+| Recursive | 依分隔符優先序找邊界，過長片段繼續細切 | 共用設定加上 `separators`（分隔符順序）及 `keep_separator`（是否保留分隔符）。 |
+| Header-aware | 先依標題層級切分，超長章節再用 Recursive | 共用設定加上 `header_levels`、標題能力及 Recursive 備援參數。 |
 
 Fixed-size 的邏輯步長為 `size - overlap`；從 Token 0 開始，最後一塊不足 size 時保留、不補齊。視窗涵蓋文件結尾即停止，不再產生只重複末尾 overlap 的多餘 Chunk。例如 Token 串長 11、size=4、overlap=1，半開區間依序為 `[0:4]`、`[3:7]`、`[6:10]`、`[9:11]`；長度為 10 時則在 `[6:10]` 結束。這是 Token 視窗語意例子；Unicode 完整邊界、offset 映射及實際模型輸入重新計數的精確策略仍由 Q-004 核定，不能靠任意 decode Token 片段破壞原文。
 
@@ -71,7 +73,7 @@ D-53 的保留完整原文功能已在 Prototype v0.12 以舊 Unit 模型示範�
 3. 按 Batch Size 呼叫 Embedding Adapter；現有 Prototype 的格式基線為 OpenAI-compatible embeddings。正式首組服務、相容範圍及模型契約仍待 Q-003，不把原型格式當作所有 Embedding API 的通用標準。
 4. 驗證回應 index 對應、數量、維度與有限值；不能因回傳順序錯誤把向量寫給其他 Chunk。
 5. normalization 與 metric 依 Profile 執行；記錄模型／版本／Provider request ID。
-6. 寫回原 Document.vectors 的命名物件（values、embedding_profile_id、source_field），精確格式引用 Document 契約；保留 structdata／metadata。預設 structdata.text → vectors.text，其他映射由進階設定；純全文 Pipeline 不初始化此服務。
+6. 寫回原 Document.vectors 的命名物件（values、embedding_profile_id、source_field），精確格式引用 Document 契約；保留 structdata／metadata。向量映射清單預設一筆 `structdata.text → vectors.text`，可直接新增映射。純全文 Pipeline 不初始化此服務。
 
 **例外**：缺欄位、超長、429／Timeout、批次缺項、維度錯誤與非法數值。截斷或 partial 需明確政策，不能默默處理。
 
@@ -84,7 +86,7 @@ D-53 的保留完整原文功能已在 Prototype v0.12 以舊 Unit 模型示範�
 
 **目的**：保存 Chunk，依欄位用途建索引，回報寫入與可搜尋狀態。Runtime 套用設定時由 Engine 推導索引定義，再由 Elasticsearch 索引存取層建立或接回目標。索引存取層驗證實際 mapping、索引歸屬與相容性指紋，並依 [Runtime 索引生命週期](06_runtime_api_and_deployment.md#system-index-lifecycle) 執行重建或卸載。
 
-Indexing 保存全部有效 structdata、metadata 與向量。全文與 Filter 能力從 structdata 的有效宣告及 [Indexing 覆寫](05_system_config.md#data-schema-config) 推導，向量能力依向量欄位與 Profile 推導。只保存的 structdata 字串可供 Rerank 或顯示使用，metadata 整包保存供取回。
+Indexing 保存全部有效 structdata、metadata 與向量。全文與 Filter 能力從 structdata 的有效宣告及 [Indexing 覆寫](05_system_config.md#data-schema-config) 推導，向量能力依逐欄選定的 `vector_fields` 及其 Profile 推導。只保存的 structdata 字串可供 Rerank 或顯示使用，metadata 整包保存供取回。
 
 **處理**：
 
@@ -114,7 +116,7 @@ FAISS 的維度／metric 不足以證明向量空間相容。cosine／inner prod
 
 **執行方式**：`none` 沿用原始問題，`rewrite` 用同一個 Component 產生一個或多個改寫問題。自訂外部 Query Transformation 使用共用 Remote API Adapter。
 
-**參數**：`llm_ref` 選 System 共用 LLM，`prompt` 可引用 `{{query}}`、`{{count}}` 及已宣告的 `{{params.name}}`。`count` 是改寫問題的正整數筆數。`include_original` 決定是否另加一筆原始 Query 參與 Retrieval。原始問題始終保存在各 Context 的 `ori_query`。
+**參數**：`llm_ref` 選 System 共用 LLM，`prompt` 可用 `{{query}}` 取得原始問題、`{{count}}` 取得改寫筆數。這兩個模板內建名稱優先於同名參數。其他名稱可用 `{{KEYNAME}}` 引用，依[共用取值規則](05_system_config.md#parameter-references)解析。`count` 是改寫問題的正整數筆數。`include_original` 決定是否另加一筆原始 Query 參與 Retrieval。原始問題始終保存在各 Context 的 `ori_query`。
 
 **輸出**：`none` 輸出一筆原始 Query Context。`rewrite` 依驗證過的改寫字串建立 `QueryContext[]`，保留原始問題、filters 和 metadata，供下游 Retrieval 使用。跨 Query 設定的執行時點見 [結果處理](#result-processing)。
 
@@ -195,7 +197,7 @@ query_transformation:
 
 1. 取得對應 Config／Binding，確認 Profile 與資料就緒。
 2. 套用已驗證的 `QueryContext.filters`。Engine 在發布時驗證固定 Filter、在 Inference Input 驗證請求 Filter，兩組以 AND 合併。欄位、運算子、值與 OR 群組遵守 [Filter 契約](02_data_contracts.md#filter-semantics)。
-3. 建立每個 Query × 全文／向量欄位的路徑；向量路徑依其 Profile 使用 query encoding。
+3. 每個 Query 對每個選定的全文或向量欄位建立一條路徑。向量路徑透過 `IndexBinding.vector_bindings[欄位].embedding_profile_id` 使用原索引指定的 Query Encoder。不同向量欄位可沿用各自的 Profile。
 4. 每個 Query 的每條內建搜尋路徑先套用完整 Filter，再依 `per_route_k` 取候選，保留路徑、排名、分數及其方向。
 5. 同一 Query 若有多條搜尋路徑，須選 RRF 或 Sum Score，以 `data_id` 對齊所有路徑的候選並融合成一份清單。只有一路時，直接使用該路結果。若 Adapter 將融合交給後端，須驗證行為符合選定策略與每路上限。
 6. 若設定 `group_by`，先取得所需候選欄位，依當前排名分組，再執行選填的 Retrieval `top_n`。內建 Retrieval 對每個 Query 交付一份 ResultSet。
@@ -226,7 +228,7 @@ Inference 的業務 Input／Output 統一為 `list[QueryContext]`（JSON root ar
 | Rerank | 每份清單模型評分並重排 → 可選 `group_by` → Rerank Top N |
 | 跨 Query | 等所選步驟完成 → 跨 Query 融合 → 可選 `group_by` → 可選跨 Query Top N |
 
-跨 Query 融合以同一原始問題為範圍，將各 Query 已完成當步處理的清單合併。若接入 Remote Retrieval 且平台負責跨 Query 融合，服務須提供可辨識的 Query／ResultSet 分組。只有一個有效 Query 時略過跨 Query 規則。若選 `after_rerank` 且 Rerank 為 None，跨 Query 使用到達該時點的清單及排名。
+跨 Query 融合以同一原始問題為範圍。平台收到兩個以上有效 Query 時，必須合併各 Query 在指定步驟完成後的清單。只有一個有效 Query 時略過融合。若接入 Remote Retrieval 且平台負責融合，服務須提供可辨識的 Query／ResultSet 分組。若 `cross_query_at` 選 `"Rerank 後"` 且 Rerank 為 None，融合使用到達該時點的清單及排名。
 
 ### 分組代表
 

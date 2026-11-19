@@ -1,12 +1,15 @@
 # Retrieval Builder UI、原型狀態與 Backlog
 
-2026-11-17｜[目前的 UI Prototype](../01_ui_prototype.html) 沿用工作區側欄、System 卡片及設定與操作視窗。Component 選單包含已規劃方法，表單依選擇切換並保留各方法的草稿。索引發布、匯入與查詢以 W1 Elasticsearch 為執行範圍，規劃中的 Component 與設定可保存草稿。Remote API 可設定替換範圍與服務參數。下文的 v0.12～v0.15 操作紀錄對應[舊版快照](history/source_snapshots/ui-prototype-v015/01_ui_prototype.html)。
+2026-11-17｜[目前的 UI Prototype](../01_ui_prototype.html) 沿用工作區側欄、System 卡片及設定與操作視窗。Component 選單依設計文件列出方法名稱，表單依選擇切換並保留各方法的草稿。索引發布、匯入與查詢以 W1 Elasticsearch 為模擬範圍。超出範圍的設定可保存草稿，發布時會指出不支援的模組。各方法的規格與待決細節見 [Engine／Component 開發](03_engine_and_components.md) 及 [開發計畫與決策](08_plan_and_decisions.md)。Remote API 可設定替換範圍與服務參數。下文的 v0.12～v0.15 操作紀錄對應[舊版快照](history/source_snapshots/ui-prototype-v015/01_ui_prototype.html)。
 
 ## 閱讀目錄
 
 - [目標、相依與範圍](#src-06-1-目標相依與範圍)
 - [畫面與操作地圖](#src-06-2-畫面與操作地圖)
 - [Create／Edit 的資料與互動](#src-06-3-createedit-的資料與互動)
+- [其他設定 → Secret](#system-settings-rendering)
+- [Descriptor 與表單控制項](#descriptor-form-rendering)
+- [`ui_hints` 定義與 Renderer 輸入](#ui-hints-contract)
 - [從 CSV 開始](#src-06-4-從-csv-開始)
 - [Ingestion 畫面](#src-06-5-ingestion-畫面)
 - [Inference 與診斷](#src-06-6-inference-與診斷)
@@ -92,11 +95,14 @@ Create／Edit 可選用全域模板，設定 Import 入口欄位及參數，再�
 | 服務 | DEV／自行提供、必要 URL／模型／認證引用 | Timeout、精確 Profile／Tokenizer 等 |
 | Parsing（已確認） | 只顯示結構化 JSON | 其他格式及相關設定全部收在預設關閉進階區 |
 | Chunking（欄位簡化已確認） | 切分方式／必要參數，直接用 text；不顯示切分／複製欄位選單，metadata 全繼承 | 單一切分來源、輸出名稱、可選複製欄位及完整原文保留。依方法顯示 Token、分隔符／標題層級設定。見 UIB-013。 |
-| Embedding | 來源欄位、輸出向量、模型 | 維度／Encoding／Normalization、Batch、輸入限制 |
-| Indexing | 後端、全文／向量欄位、過濾能力；全部內容自動保存的摘要 | 後端特有參數、進階 Mapping（支援後才顯示）；不要求再勾選保存內容 |
+| Embedding | 組合文字欄位置頂並附可展開範例。服務來源與 Embedding Profile 同在模型設定區。向量映射預設一筆，可按「＋ 新增」加入其他映射。 | 維度／Encoding／Normalization、Batch、輸入限制 |
+| Indexing | 後端、全文／過濾欄位用途、逐欄勾選向量索引；全部內容自動保存的摘要 | 後端特有參數、進階 Mapping（支援後才顯示）；不要求再勾選保存內容 |
 | Query Transformation | None／Rewrite／Remote API；Rewrite 選共用 LLM 並設定改寫數量 | Prompt、include_original；可能產生多 Query 時設定跨 Query 融合 |
-| Retrieval／Fusion Plan | 全文／向量欄位、`per_route_k`、選填固定 Filter、多路搜尋時選 RRF 或 Sum Score | 可選當步分組及 Retrieval Top N。跨 Query 規則由 Query Transformation 設定。 |
+| Inference Input | 有效輸入／輸出規格預設收合 | 固定 Filter、Request 參數 |
+| Retrieval／Fusion Plan | 向量欄位和全文欄位皆可多選，其下依序顯示每路 Top K、多路時的 RRF／Sum Score、Group by 合併欄位、Top N。查詢 Profile 隨各向量欄位的索引綁定。 | 依融合策略顯示專屬參數。跨 Query 規則由 Query Transformation 設定。 |
 | Rerank | None／服務、單一評分內容欄位、Rerank Top N（原型預設 3）、實際提問來源 | 當步分組、逐 Query 問題選擇、附加內容欄位、Timeout／服務輸入限制 |
+
+Import 可選已整理欄位或待解析來源。選待解析來源時，入口要求 `content`，可附已知的 `structdata`，並開放內建檔案 Parser。Import 的入口 JSON Schema、Request 範例和各模組的有效 I/O 預設收合。
 
 必填但缺失的設定不能因進階區收合而無法發現；錯誤摘要可直接展開並定位。改動過的進階設定收起後，建議顯示已修改項數／簡短摘要。範圍、預設值及「每次記住展開」政策見 Q-025。
 
@@ -111,7 +117,7 @@ Create／Edit 可選用全域模板，設定 Import 入口欄位及參數，再�
 | 共用 LLM 服務 | DEV test use／OpenAI-compatible API | 自行提供時設定 Base URL、Model、認證引用；Query Transformation 以下拉 llm_ref 引用，不各填一份連線 |
 | Rerank | None／DEV test use／Rerank API | 啟用時設定內容欄位與 Top-N；自行提供時另填 API URL、Model、認證引用 |
 
-DEV test use 使用平台測試資源；匯出部署時需填入使用單位的綁定。Embedding／LLM 的現有原型格式分別為 OpenAI-compatible embeddings／Chat Completions，Rerank 為 04 的平台契約；首組真實服務的相容範圍仍由 Q-003 核定。
+內建服務的來源預設為 DEV test use，使用平台測試資源。匯出部署時需填入使用單位的綁定。Embedding／LLM 的現有原型格式分別為 OpenAI-compatible embeddings／Chat Completions，Rerank 為 04 的平台契約；首組真實服務的相容範圍仍由 Q-003 核定。
 
 <a id="src-06-322-已註冊-developer-serviceremote-pipelined-51已有原型模擬真實整合待做"></a>
 ### User Remote API 與選用模板
@@ -119,16 +125,24 @@ DEV test use 使用平台測試資源；匯出部署時需填入使用單位的�
 User 在節點切換到 Remote API，設定 Endpoint、認證、參數及替換範圍。涵蓋的節點顯示管理來源，原內建設定留在草稿。Builder 顯示由上游推導的 Request 與有效 Response Schema，並提供本機回應驗證。涵蓋 Embedding 時宣告向量輸出；內建向量 Retrieval 按 Profile 設定 Query Encoder。
 
 Admin 在 Builder 以外維護版本化全域模板。Builder 顯示可選版本，套用時複製至目前草稿。User 可調整設定及環境綁定。模板目錄為唯讀，系統儲存沿用既有驗證。
+
+<a id="system-settings-rendering"></a>
+### 其他設定 → Secret
+
+**由 Builder 直接實作固定的 System 設定畫面。** Secret 編輯器讀寫 System Config 的 `config.secret`，以 [System Config Schema](../schemas/system_config.draft.schema.json) 驗證資料形狀。Prototype 在選到「其他設定」時直接呼叫 `secretSettings(draft)`。Ingestion／Inference 中支援 Descriptor 的 Component 參數則由 [表單 Renderer](#descriptor-form-rendering) 依 `parameters_schema` 產生，寫回各節點的 `parameters`。
+
+此區與 Ingestion、Inference 同層。使用者可新增、編輯及刪除多組 Key／Value，Value 輸入採遮罩。各 Module 統一用 `{{KEYNAME}}`。一般參數優先取已驗證的同名 Request 參數，認證欄位只取同一 System 的 Secret。Builder 測試使用此處輸入的值，匯出預覽只顯示 Key 與環境注入設定。驗證訊息定位 Key、Module 或欄位，遮罩實際值。單檔 Prototype 的測試值保留於本頁記憶體，瀏覽器保存與下載只保留 Key。實際 DEV Runtime 串接仍待整合。見 [System Secret](05_system_config.md#system-secret)。
+
 ### 條件欄位與相依驗證
 
-- 自行提供模型／DB 或 Remote API 時填必要連線與 Secret reference。平台測試資源使用部署綁定。
+- 自行提供模型／DB 或 Remote API 時填必要連線，認證欄位使用 `{{KEY}}`。平台測試資源使用部署綁定。
 - Local Search 選 MongoDB 才呈現 DB 連線；Memory 不要求資料庫。
 - Query Transformation 只選 llm_ref；共用服務只管理一次。
 - None 的 Top-N／Prompt 等欄位可保留草稿但停用，不參與有效 Config 驗證／匯出。
 - 上游刪除欄位或模型引用失效時，保留草稿選擇、標示原因並阻擋發布。
 - 不支援能力顯示且停用，附可理解原因；不能讓顯示的 Mock 選項假裝正式可用。
-- 前端 Validator 提供即時回饋，Backend／Engine 仍重新驗證。Schema 及規則來源需共用或由後端產生，避免手寫三份不同規則。
-- Component 目錄／Config Schema 與驗證結果綁定目標 Runtime 版本；目錄變動不靜默升級既有 System 或覆寫草稿。API／Schema 與既有控制項相容時，新增 Component 可在 Runtime 更新後供原版 Builder 選用；未知控制項／不相容格式明示需支援，不假裝可完整設定。目錄快取與版本協調見 07，畫面待辦見 Builder UI／Backlog手冊 UIB-010。
+- Builder 在編輯時依 Descriptor 與有效 I/O 提供即時驗證。通過本地檢查後，發布前呼叫 Runtime 的 [Config Validation API](06_runtime_api_and_deployment.md#config-validation-api) 做最終驗證。正式套用時，Runtime 再核對版本與索引狀態。Schema 與推導規則由 Builder 和 Engine 共用。
+- Component 目錄／Config Schema 與驗證結果綁定目標 Runtime 版本；目錄變動不靜默升級既有 System 或覆寫草稿。API／Schema 與既有控制項相容時，新增 Component 可在 Runtime 更新後供原版 Builder 選用；未知控制項／不相容格式明示需支援，不假裝可完整設定。目錄快取與版本協調見 [Catalog API](06_runtime_api_and_deployment.md#w1-catalog)，畫面待辦見 UIB-010。
 
 錯誤顯示 `[模組] 原因`；進一步可提供欄位位置、修正方式與是否需重新 Ingestion。UI 不要求使用者理解內部 Python 類別或堆疊。
 
@@ -149,7 +163,73 @@ Admin 在 Builder 以外維護版本化全域模板。Builder 顯示可選版本
 
 2026-10-28 D-42 將動態 Component 表單列為已確認規劃方向，描述／規則草案與案例集中於 [Descriptor](04_component_descriptor.md)。Create／Edit 保持固定介面，Component 參數才依 Schema 產生；無關分支欄位隱藏，進階預設收合，不相容選項顯示且停用。上游變更使已選值失效時保留並標錯，可以繼續編輯，但發布／建立有效版本／套用需通過 Engine 驗證；草稿持久化仍依 Q-016／Q-025。
 
-動態候選使用目前有效欄位／服務／索引能力，前端不自行指定可信 Context。多個相同 Module 的錯誤以 node_ref＋欄位路徑定位。未知必要 UI feature 明示不支援且不能套用不完整設定；不自動改為任意 JSON 編輯器。實作與 SUI-01～14 互動驗收記在 10 UIB-010；v0.12 僅完成簡單模擬表單，正式協定驗收仍待整合。
+<a id="descriptor-form-rendering"></a>
+### Descriptor 與表單控制項
+
+Builder 以選定方法的 `parameters_schema.properties` 產生參數欄位，並把編輯值寫回同一個 `parameters` 物件。欄位先依 `const`、專用控制項、動態選項、固定 `enum`、一般型別決定呈現。專用控制項可以使用動態候選，例如向量清單的候選來自 `/vector_fields/*`。支援範圍如下。
+
+| Descriptor 宣告 | UI 控制項與保存格式 | 驗收 |
+|---|---|---|
+| `const` | 唯讀值，Config 保存原始 JSON 型別 | 可看見值且無法修改。新建套用固定值。 |
+| `option_sources` 指向字串欄位 | 動態下拉。Builder 從 Catalog 資源或草稿有效 I/O 解析候選，並依宣告的 `enum` 篩選 | 例如每列的來源讀取 `/copy_fields/*/source_field` 宣告。保留失效值並顯示原因。 |
+| 固定 `enum` | 固定下拉，寫回原始 JSON 值 | 不發出選項查詢。數值與布林選項保存為數值與布林。 |
+| `string` | 單行文字輸入，長文可宣告 `textarea` | 依 Schema 檢查長度及格式。 |
+| `boolean` | 勾選框 | 勾選和取消分別保存 `true` 與 `false`。 |
+| `integer` | 數字輸入，`step=1` | 整數含 0 可保存，檢查 `minimum`／`maximum`。 |
+| `number` | 數字輸入，`step=any` | 保留小數型別，例如輸入 `0.25` 保存為 JSON 數值，檢查上下限。 |
+| `array` | 可新增刪除的列表，每一列依 `items` 渲染。固定欄位的物件陣列用表格 | 依項目 Schema 及 `minItems`／`maxItems`／`uniqueItems` 驗證。 |
+| 有 `properties` 的 `object` | 群組，遞迴渲染子欄位。表格可將固定的子欄位展成各欄 | 依該層 `required` 標示必填，保存為原有巢狀結構。 |
+| 開放型 `object` | JSON 物件編輯器，或依 `ui_hints.controls` 使用專用表格 | 保存 JSON 物件並依 Schema 驗證。共用 `$ref` 由已載入的 Schema Registry 解析。 |
+
+`default` 用於初始化缺值，已有草稿值優先。必填和格式問題在欄位及錯誤摘要顯示，由 Runtime 在發布前做完整驗證。遇到超出 Renderer 支援的必要格式或專用控制項，Builder 顯示不相容原因並保留草稿，待支援後才可發布。
+
+Builder 用草稿推導有效欄位及索引計畫，並讀取 Catalog 的環境資源清單。Runtime 執行發布前的權威驗證。多個相同 Module 的錯誤以 `node_ref` 和欄位路徑定位。SUI-01～14 互動驗收見 UIB-010。
+
+<a id="ui-hints-contract"></a>
+#### `ui_hints` 定義與 Renderer 輸入
+
+Renderer 的共同輸入是已選 Component 的 Descriptor、目前草稿與該畫面需要的相依資料。先由 `parameters_schema` 和草稿決定要畫的欄位，再依 `ui_hints` 安排位置、選專用控制項及顯示附加區塊。欄位編輯寫回草稿。排序、分組、展開及預覽狀態由 Builder 管理。以下格式由 [Descriptor Meta-schema](../schemas/component_descriptor.draft.schema.json) 的 `properties.ui_hints` 定義。
+
+| Hint | 宣告格式與 Renderer 輸入 | 渲染行為與省略時的預設 |
+|---|---|---|
+| `order` | 不重複的參數路徑陣列，例如 `["/source", "/structdata"]`。搭配可見的參數欄位 | 已列欄位優先按清單排序，未列欄位按 Builder 讀到的 `properties` 順序接續。省略時沿用該順序。 |
+| `groups` | 群組陣列，每組必填 `title: string` 與 `fields: string[]`，可附 `example: object`。搭配各欄位的 Schema 和草稿值 | 按群組陣列順序顯示在一般欄位區上方，群組內按 `fields` 順序。分組欄位從一般與進階清單移出。範例以唯讀內容呈現。省略時無自訂群組。 |
+| `advanced` | 不重複的參數路徑陣列，例如 `["/request_parameters"]`。搭配可見且尚未分組的欄位及驗證結果 | 欄位集中於預設收合的「進階設定」，被驗證錯誤定位時展開。省略時參數沿用基本區或既有分組。 |
+| `controls` | `{參數路徑: 專用控制項名稱}`。每項取得該路徑的 Schema、目前值和下表所列資料 | 依名稱使用專用 Renderer。該路徑未指定時按前述通用規則選控制項。 |
+| `previews` | 支援 `effective_io` 和 `ingestion_request`，各接受選填的布林 `collapsed`，預設 `true`。搭配目前草稿推導的唯讀內容 | `effective_io` 顯示有效輸入與輸出 Schema，預設提供收合區。Import 宣告 `ingestion_request` 時另顯示匯入 Request 的 JSON Schema 和範例。`collapsed: false` 初次展開該預覽。 |
+| `fixed_filters` | Inference Input 可宣告 `"advanced"`。Renderer 讀取 `pipelines.inference.fixed_filters` 的草稿值，以及可過濾的索引欄位、型別和適用運算子 | 在進階區畫固定 Filter 編輯器，編輯值寫回原路徑。無既有 Filter 時顯示空清單。省略 hint 時，Renderer 略過該編輯區。 |
+| `visible_when` | `{參數路徑: boolean 或條件物件}`。條件物件以 `all` 或 `any` 包住一組條件，讀取同一 Component 的草稿值及缺值時的 Schema 預設 | 控制欄位顯示。省略時預設顯示。欄位收起後保留草稿，參數合法性和有效執行分支仍依 Config 契約處理。 |
+
+`order`、`groups[].fields`、`advanced`、`controls`、`visible_when` 和 `option_sources` 的路徑相對於該 Component 的 `parameters`。例如 `/structdata` 讀取 `parameters.structdata`。`visible_when` 的目標及條件只引用第一層參數。條件支援 `{path, equals}`、`{path, minimum}`、`{paths, minimum_selected}`。最後一種按每個字串陣列計算非空且不重複的選值，再將數量相加。同一欄若同時指定 `advanced`，會先判斷可見性。
+
+例如 Embedding 的 `visible_when["/composition_template"] = {"all":[{"path":"/compose_text","equals":true}]}`。Retrieval 的 `fusion` 則在 `vector_fields` 和 `fulltext_fields` 合計至少選定兩條路徑時顯示。
+
+| `controls` 值 | 額外輸入與來源 | UI 與寫回 |
+|---|---|---|
+| `structdata_editor` | 共用 Data Meta Schema 的 `structdata` 定義和草稿欄位宣告 | Import 文件欄位表，編輯名稱、型別、必填、全文與 Filter。保存欄位名到欄位定義的物件。 |
+| `structdata_overrides_editor` | Data Meta Schema 的 `overrides` 定義、上游有效欄名／型別／全文與 Filter 旗標、草稿覆寫值 | Indexing 欄位用途表。每個旗標可沿用、啟用或停用。沿用以省略覆寫表示，啟用、停用分別保存 `true`、`false`。 |
+| `vector_checklist` | `input.vectors` 的候選向量名稱和可用狀態、上游向量的來源欄位與 Profile、草稿中已勾選的向量名稱 | Indexing 向量勾選表，回寫選取的向量名稱陣列。 |
+| `textarea` | 字串 Schema 與草稿字串 | 多行文字欄，例如 Rewrite Prompt 或 Embedding 組合文字。保存字串和換行。 |
+
+欄位文字來自 `parameters_schema.properties.<欄位>.title` 與 `description`，分別顯示為欄位標籤和控制項下方的輔助文字。省略標題時使用 Builder 已有的本地化名稱或參數名稱。群組文字使用 `groups[].title` 和選填的 `example`，目前群組格式沒有 `description`。專用表格的固定表頭、按鈕與提示由 Renderer 提供。動態選項的失效及相依未就緒提示由 Builder 依 Catalog 與草稿推導，發布驗證錯誤由 Runtime 提供。
+
+Import 的 `platform` Descriptor 例如以下宣告。Renderer 依序顯示入口資料形式、文件欄位表，再將 Request 參數收進進階區。
+
+```json
+{
+  "ui_hints": {
+    "order": ["/source", "/structdata"],
+    "advanced": ["/request_parameters"],
+    "controls": {"/structdata": "structdata_editor"},
+    "previews": {
+      "effective_io": {"collapsed": true},
+      "ingestion_request": {"collapsed": true}
+    }
+  }
+}
+```
+
+W1 Builder 從 [Catalog](06_runtime_api_and_deployment.md#w1-catalog) 取得 Descriptor 與環境資源，並從草稿推導上游欄位與能力旗標、向量來源及各模組有效 I/O。Prototype 使用同形狀的內嵌 Catalog。全數 Module 與 Component 見[表單清冊](04_component_descriptor.md#prototype-component-inventory)。
 
 <a id="src-06-331-討論提案query-rewrite-單模組測試"></a>
 ### 討論提案：Query Rewrite 單模組測試
@@ -195,7 +275,7 @@ Builder 的 CSV 資料上傳以目標 System 的索引資料為替換範圍。�
 |---|---|
 | CSV 預檢 | 處理 BOM／引號／換行；欄名非空唯一；每列欄數一致；正式編碼／超限政策待決 |
 | 目標 | document_id、source_revision、Parser 接受的 content.*／外層 metadata.*；解析後的 Unit 欄位宣告用來核對內容映射 |
-| 映射 | 可將同一 column 填入多個目標；未映射欄位不送出 |
+| 映射 | 可將同一 column 填入多個目標；未映射欄位不送出。已映射的 `source_revision` 保留 CSV 原始文字，空儲存格傳 `""`。 |
 | 必填 | 無預設值的 input 必填欄位須映射 |
 | 型別 | number 有限值；boolean 規則明確；array 用 JSON 解析；正式強制轉型政策 Q-002 |
 | ID | 可映射來源主鍵；整批替換時須確保本次資料集的文件 ID 唯一，自動 ID 生成方式待定 |
@@ -259,9 +339,9 @@ Builder 對新建立或清空後重新建置的資料集，等預定的初次資
 |---|---|
 | 基本 | 檢索內容、分數／排名／來源、索引未就緒／服務錯誤 |
 | 進階 | 原始與衍生 Query、各路候選、融合結果、Rerank 前後、實際 Context、耗時／用量 |
-| 版本 | config_revision、index_generation、request_id；不可顯示為另一版的結果 |
+| 版本 | 取自 Inference 的 `X-Config-Revision`、`X-Index-Generation`。Trace 使用的 `request_id` 依 Q-019 後續契約。 |
 
-Trace 保存與敏感內容政策見 Q-016，診斷顯示範圍見 Q-025。Filter 表單分別顯示固定條件與本次附加條件，日期時間預設顯示 Asia/Taipei。Inference 執行失敗時顯示 Runtime 的錯誤，成功但無候選時顯示無命中。API 說明隨時可查看，不需先 Ingestion。Ingest／Inference 皆有「查看 API 端點」入口，內容包含當前 Base URL、認證示意、JSON／multipart、cURL、回應與錯誤；Ingest 另示範 run_id 輪詢。查看說明不執行工作或模型／DB 測試。
+Trace 保存與敏感內容政策見 Q-016，診斷顯示範圍見 Q-025。Filter 表單分別顯示固定條件與本次附加條件，日期時間預設顯示 Asia/Taipei。Inference 執行失敗時顯示 Runtime 的錯誤，成功但無候選時顯示無命中。Ingest／Inference 的「查看 API 端點」呈現 Base URL、認證、JSON、cURL、回應及錯誤。Ingest 另示範 `run_id` 輪詢。檔案上傳由 Builder 轉為 Runtime Ingestion JSON，見 [Runtime 上傳邊界](06_runtime_api_and_deployment.md#src-07-54-builder-上傳與自行部署)。查看說明不會觸發工作。
 
 <a id="src-06-7-evaluation-與-edit-config"></a>
 ## Evaluation 與 Edit Config
@@ -293,7 +373,7 @@ Runtime 的新舊 Revision／Index 發布策略見 Q-010／Q-015。原始資料�
 - 沿用選定 System 的同版 Config，逐項填入部署環境的 LLM、Embedding、Rerank、ES／MongoDB 綁定；同 llm_ref 不重複填連線。改 URL／Secret 不覆寫邏輯 Config。
 - 使用 DEV 綁定者可下載待設定草稿；必要資訊已填妥者標示「已填妥，尚未驗證」。
 - 只允許合法環境覆寫；更改 Embedding Model 提示返回 Edit Config 並重建。
-- Remote API 匯出環境連線與 Secret 引用。
+- 匯出保留 `config.secret` 的 Key，值設為 `null`。部署設定提供同名環境變數及對應的 Secret／ConfigMap。Remote API 另匯出目標環境的連線設定。
 - 不含實際 Secret、Image 本體、Chunk／vectors 或測試原文；提醒需在目標環境準備資料／Ingestion。
 - Local Search 單程序／單副本；不可透過 UI 匯出多副本而宣稱可共享索引。
 - FTEST／ENT 檔名、環境值與完整 Bundle 待 Q-021；正式文案稱 Config／部署設定。原型舊的 RAGBlueprint／blueprint.json 僅是待遷移標籤，不是另立的產品物件；單份示意 YAML 不代表正式交付完成。
@@ -384,16 +464,16 @@ API 回傳最終有效清單。D-52：Chunk.metadata._rag.source_refs 為選填�
 <a id="src-10-2-結果處理與有效設定"></a>
 ## Prototype／Backlog：結果處理與有效設定
 
-現有 Prototype 的舊版控制項集中在 Retrieval 進階設定。同 Query 多路與跨 Query 控制項預設收合，兩種融合預設勾選且可各自選時點。正式 UI 依[已確認設計](#src-09-3-現行-ui-規劃)將內建多路搜尋固定為融合後每 Query 一份，原型的分路輸出選項待對齊。ES 已內部融合時停用重複融合；單 Query／單路保留草稿意圖。預設平台 RRF，ES 內部預設 Sum Score。權重／RRF k 僅對有效策略驗證。
+現行 Prototype 可在 Retrieval 基本區設定每路 Top K、同 Query 融合、Group by 合併欄位與 Top N。選定多條路徑後顯示融合策略，選 RRF 才在進階區顯示 RRF k。跨 Query 控制項由 Query Transformation 管理。[正式結果處理流程](#src-09-3-現行-ui-規劃)在同 Query 多路融合後交付每 Query 一份清單。
 
 | 位置 | 作用範圍 |
 |---|---|
-| Retrieval 搜尋 Top K | 每 Query／每路；ES Hybrid 為每 Query 的一份輸出 |
-| Retrieval 後合併 Top N | 該時點處理後的每份清單 |
-| Reranker Top N | 每份模型評分清單，預設 3 |
-| 舊版 Reranker 後合併 Top N | 舊版控制項可在 Rerank 後處理清單 |
+| Retrieval 每路 Top K | 每 Query／每路的候選上限 |
+| Retrieval Top N | 每 Query 完成多路融合與 Group by 後的上限 |
+| Rerank Top N | 每份清單完成評分、重排與 Group by 後的上限 |
+| 跨 Query Top N | 選定於 Retrieval 或 Rerank 後執行，套用在跨 Query 融合與 Group by 之後 |
 
-ResultSet.key 對應 Config 路徑／群組；items 位置即名次。RRF 可用無 score 的有序結果；Sum Score 需完整且可比分數。Prototype 的推導器只計算流程與候選上限；mockRetrieval 用固定示意候選，不真的搜尋、融合或評分。畫面說明與計畫獨立於 QueryContext JSON，不新增外框或歷史記錄。
+ResultSet.key 對應 Config 路徑／群組，items 位置即名次。RRF 可用無 score 的有序結果，Sum Score 需完整且可比分數。W1 模擬用瀏覽器資料驗證單向量路徑的 Filter、每路 Top K、Group by 與 Top N。多路搜尋及融合可保存草稿，實際執行由 Engine 驗證。
 
 原始 Draft 保留停用參數；effectiveConfig 排除它們。Create／Edit／AI 套用／匯出使用同一驗證入口。取消不改已存 System；純 Inference 改動只使舊示意結果失效，Ingestion 模組有效改動提示重跑 Ingestion。
 
@@ -521,10 +601,10 @@ ResultSet.key 對應 Config 路徑／群組；items 位置即名次。RRF 可用
 <a id="src-10-d-65文件摘要清單ui-位置仍待規劃"></a>
 ### D-65：文件摘要清單（UI 位置仍待規劃）
 
-- [ ] API 說明將文件清單回應更新為 documents[]＋next_cursor，每筆顯示 document_id／source_revisions[]，不再只列 document_ids[]。
-- [ ] 來源版本取實際儲存；多版可代表更新中／失敗後混合，不將其標為成功歷史或自行挑選最新。最近工作結果仍使用 ingestion-status。
+- 文件清單的 HTTP 格式已定，回傳 `documents[]` 與 `next_cursor`，每筆含 `document_id`、`source_revisions[]`。見 [Runtime 文件摘要 API](06_runtime_api_and_deployment.md#src-21-93-文件摘要清單d-65-已確認核心)。
+- [ ] 來源版本取實際儲存的非空版本字串。多版可代表更新中／失敗後混合，不將其標為成功歷史或自行挑選最新。最近工作結果仍使用 ingestion-status。
 
-沿用 UIB-023，不新增文件內容、版本回復或清理按鈕。分頁參數與實際面板位置後續整理；本輪未修改 Prototype。
+沿用 UIB-023。面板位置與分頁控制項仍待規劃，分頁參數依 [Runtime API](06_runtime_api_and_deployment.md#data-lifecycle-api)。
 
 
 <a id="src-10-d-66system-config-整合草案先記錄待討論改-ui"></a>

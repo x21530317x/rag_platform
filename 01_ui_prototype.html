@@ -142,6 +142,8 @@ td .control{padding:5px 7px}
 .result h3{margin:0}
 .result p{margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
 details{margin-top:14px}
+fieldset.field{margin-inline:0;min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+fieldset.field legend{color:var(--ink);padding-inline:4px}
 summary{cursor:pointer;color:var(--accent);font-weight:650}
 .modalfoot{flex-wrap:wrap}
 @media(max-width:850px){.builder,.operation{grid-template-columns:1fr}}
@@ -178,7 +180,10 @@ summary{cursor:pointer;color:var(--accent);font-weight:650}
 </dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 <script type="application/json" id="runtime-fixture">
-{"catalog":{"runtime_ref":"dev-runtime","catalog_revision":"catalog-1","descriptors":[{"descriptor_version":"0.2-draft","module":"import","component_id":"platform","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"structdata":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json"}},"required":["structdata"],"additionalProperties":false},"io":{"input":"IngestionRequest","output":"Document"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"passthrough","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"chunking","component_id":"recursive","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"split_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1},"copy_fields":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1}},"required":["source_field","output_field"],"additionalProperties":false}},"max_tokens":{"type":"integer","minimum":1},"overlap_tokens":{"type":"integer","minimum":0},"tokenizer_profile_id":{"type":"string","minLength":1}},"required":["split_field","output_field","copy_fields","max_tokens","overlap_tokens","tokenizer_profile_id"],"additionalProperties":false},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/split_field":{"source":"input.structdata","types":["string"],"required":true},"/tokenizer_profile_id":{"source":"tokenizer_profiles"},"/copy_fields/*/source_field":{"source":"input.structdata","types":["string","string_array","integer","number","boolean","date","datetime"]}},"data_rules":[{"op":"declare","target":"/output_field","schema":{"type":"string","required":true}},{"op":"copy","source":"/source_field","target":"/output_field","for_each":"/copy_fields"}],"constraints":[{"op":"lt","left":"/overlap_tokens","right":"/max_tokens"}],"ui_hints":{"advanced":["/copy_fields","/overlap_tokens"]}},{"descriptor_version":"0.2-draft","module":"embedding","component_id":"dense","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"vector_name":{"type":"string","minLength":1},"profile":{"type":"string","minLength":1}},"required":["source_field","vector_name","profile"],"additionalProperties":false},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/source_field":{"source":"input.structdata","types":["string"],"required":true},"/profile":{"source":"profiles"}},"data_rules":[{"op":"vector","source":"/source_field","target":"/vector_name","profile":"/profile"}],"constraints":[]},{"descriptor_version":"0.2-draft","module":"indexing","component_id":"elasticsearch","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"service_ref":{"type":"string","minLength":1},"vector_name":{"type":"string","minLength":1},"structdata_overrides":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json#/$defs/overrides"}},"required":["service_ref","vector_name"],"additionalProperties":false},"io":{"input":"Document[]","output":"IndexBinding"},"option_sources":{"/service_ref":{"source":"elasticsearch_services"},"/vector_name":{"source":"input.vectors"}},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"inference_input","component_id":"platform","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"InferenceRequest","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"query_transformation","component_id":"none","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"retrieval","component_id":"builtin","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"vector_name":{"type":"string","minLength":1},"query_profile":{"type":"string","minLength":1},"per_route_k":{"type":"integer","minimum":1},"fulltext_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true},"group_by":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true}},"required":["vector_name","query_profile","per_route_k"],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{"/vector_name":{"source":"index_plan.vectors"},"/query_profile":{"source":"profiles"},"/fulltext_fields/*":{"source":"index_plan.fulltext"},"/group_by/*":{"source":"candidate.document_fields","types":["string"]}},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"rerank","component_id":"none","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]}]},"config":{"contract_version":"0.2-draft","pipelines":{"ingestion":{"import":{"component_id":"platform","component_version":"1.0.0","parameters":{"structdata":{"body":{"type":"string","required":true},"title":{"type":"string","required":true,"filterable":true},"price":{"type":"number","required":false,"searchable":false,"filterable":false},"tags":{"type":"string_array","required":false,"searchable":false,"filterable":true}}}},"parsing":{"component_id":"passthrough","component_version":"1.0.0","parameters":{}},"chunking":{"component_id":"recursive","component_version":"1.0.0","parameters":{"split_field":"body","output_field":"text","copy_fields":[{"source_field":"title","output_field":"title"},{"source_field":"price","output_field":"price"},{"source_field":"tags","output_field":"tags"}],"max_tokens":500,"overlap_tokens":50,"tokenizer_profile_id":"fixture"}},"embedding":{"component_id":"dense","component_version":"1.0.0","parameters":{"source_field":"text","vector_name":"text","profile":"text-v1"}},"indexing":{"component_id":"elasticsearch","component_version":"1.0.0","parameters":{"service_ref":"dev-search","vector_name":"text","structdata_overrides":{"text":{"searchable":true},"price":{"filterable":true}}}}},"inference":{"inference_input":{"component_id":"platform","component_version":"1.0.0","parameters":{}},"query_transformation":{"component_id":"none","component_version":"1.0.0","parameters":{}},"retrieval":{"component_id":"builtin","component_version":"1.0.0","parameters":{"vector_name":"text","query_profile":"text-v1","per_route_k":10}},"rerank":{"component_id":"none","component_version":"1.0.0","parameters":{}},"fixed_filters":[{"field":"structdata.price","operator":"gte","value":300}]}}},"ingestion":{"documents":[{"document_id":"guide-1","structdata":{"body":"定期清潔散熱孔。","title":"設備保養","price":350}}]},"query":{"query":"散熱孔怎麼清潔？","filters":[{"field":"structdata.price","operator":"lt","value":500}]}}
+{"catalog":{"runtime_ref":"dev-runtime","catalog_revision":"catalog-2","descriptors":[{"descriptor_version":"0.2-draft","module":"import","component_id":"platform","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"structdata":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json"},"source":{"type":"string","enum":["structdata","content"],"default":"structdata","title":"入口資料形式"},"request_parameters":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","minLength":1,"title":"參數名稱"},"type":{"type":"string","enum":["string","integer","number","boolean","array","object"],"title":"型別"},"required":{"type":"boolean","title":"必填"},"default_value":{"type":"string","title":"預設值（JSON）"}},"required":["name","type","required"],"additionalProperties":false},"title":"Request 參數"}},"required":["structdata"],"additionalProperties":false},"io":{"input":"IngestionRequest","output":"Document"},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true},"ingestion_request":{"collapsed":true}},"order":["/source","/structdata"],"advanced":["/request_parameters"],"controls":{"/structdata":"structdata_editor"}}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"passthrough","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"chunking","component_id":"recursive","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"split_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1},"copy_fields":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1}},"required":["source_field","output_field"],"additionalProperties":false}},"max_tokens":{"type":"integer","minimum":1},"overlap_tokens":{"type":"integer","minimum":0},"tokenizer_profile_id":{"type":"string","minLength":1},"separators":{"type":"array","title":"分隔符順序","items":{"type":"string","title":"分隔符"}},"keep_separator":{"type":"boolean","title":"保留分隔符"},"preserve_original":{"type":"boolean","title":"複製完整原文"},"include_original_chunk":{"type":"boolean","title":"額外保留原文 Chunk"}},"required":["split_field","output_field","copy_fields","max_tokens","overlap_tokens","tokenizer_profile_id"],"additionalProperties":false},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/split_field":{"source":"input.structdata","types":["string"],"required":true},"/tokenizer_profile_id":{"source":"tokenizer_profiles"},"/copy_fields/*/source_field":{"source":"input.structdata","types":["string","string_array","integer","number","boolean","date","datetime"]}},"data_rules":[{"op":"declare","target":"/output_field","schema":{"type":"string","required":true}},{"op":"copy","source":"/source_field","target":"/output_field","for_each":"/copy_fields"}],"constraints":[{"op":"lt","left":"/overlap_tokens","right":"/max_tokens"}],"ui_hints":{"advanced":["/copy_fields","/overlap_tokens","/separators","/keep_separator","/preserve_original","/include_original_chunk"]}},{"descriptor_version":"0.2-draft","module":"embedding","component_id":"dense","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"profile":{"type":"string","minLength":1,"description":"向量空間的識別。Profile 定義模型與版本、向量維度及文件／查詢的編碼設定。Retrieval 需使用相容的 Query Encoder。"},"service_source":{"type":"string","enum":["DEV test use","Embedding API"],"default":"DEV test use","title":"服務來源"},"embedding_service_ref":{"type":"string","minLength":1,"title":"Embedding 服務引用"},"embedding_model":{"type":"string","minLength":1,"title":"模型"},"dimensions":{"type":"integer","minimum":1,"title":"向量維度"},"mappings":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1,"title":"來源欄位"},"vector_name":{"type":"string","minLength":1,"title":"向量欄位"}},"required":["source_field","vector_name"],"additionalProperties":false},"title":"向量映射","minItems":1,"default":[{"source_field":"text","vector_name":"text"}]},"compose_text":{"type":"boolean","default":false,"title":"啟用組合文字"},"composition_field":{"type":"string","minLength":1,"default":"embedding_text","title":"組合輸出欄位"},"composition_template":{"type":"string","minLength":1,"title":"文字模板","default":"標題：{{structdata.title}}\n內容：{{structdata.text}}"}},"required":["mappings","profile"],"additionalProperties":false,"allOf":[{"if":{"required":["compose_text"],"properties":{"compose_text":{"const":true}}},"then":{"required":["composition_field","composition_template"]}}]},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/profile":{"source":"profiles"},"/mappings/*/source_field":{"source":"input.structdata","types":["string"],"required":true}},"data_rules":[{"op":"compose","enabled":"/compose_text","target":"/composition_field","template":"/composition_template"},{"op":"vector","for_each":"/mappings","source":"/source_field","target":"/vector_name","profile":"/profile"}],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/mappings"],"groups":[{"title":"組合文字欄位","fields":["/compose_text","/composition_field","/composition_template"],"example":{"原始 structdata":{"title":"維護指南","text":"定期清潔濾網"},"文字模板":"標題：{{structdata.title}}\n內容：{{structdata.text}}","產生的 structdata.embedding_text":"標題：維護指南\n內容：定期清潔濾網","向量映射":{"source_field":"embedding_text","vector_name":"combined"}}},{"title":"Embedding 模型設定","fields":["/service_source","/profile","/embedding_service_ref","/embedding_model","/dimensions"]}],"controls":{"/composition_template":"textarea"},"visible_when":{"/embedding_service_ref":{"all":[{"path":"/service_source","equals":"Embedding API"}]},"/embedding_model":{"all":[{"path":"/service_source","equals":"Embedding API"}]},"/dimensions":{"all":[{"path":"/service_source","equals":"Embedding API"}]},"/composition_field":{"all":[{"path":"/compose_text","equals":true}]},"/composition_template":{"all":[{"path":"/compose_text","equals":true}]}}}},{"descriptor_version":"0.2-draft","module":"indexing","component_id":"elasticsearch","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"service_ref":{"type":"string","minLength":1},"vector_name":{"type":"string","minLength":1,"deprecated":true},"structdata_overrides":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json#/$defs/overrides"},"service_source":{"type":"string","enum":["DEV test use","自行提供 Elasticsearch"],"default":"DEV test use","title":"服務來源"},"elasticsearch_service_ref":{"type":"string","minLength":1,"title":"外部 Elasticsearch 服務引用"},"vector_fields":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true,"title":"向量欄位"}},"required":["service_ref"],"additionalProperties":false,"not":{"required":["vector_name","vector_fields"]}},"io":{"input":"Document[]","output":"IndexBinding"},"option_sources":{"/service_ref":{"source":"elasticsearch_services"},"/vector_name":{"source":"input.vectors"},"/vector_fields/*":{"source":"input.vectors"}},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/service_source","/service_ref","/elasticsearch_service_ref","/structdata_overrides","/vector_fields"],"controls":{"/vector_fields":"vector_checklist","/structdata_overrides":"structdata_overrides_editor"},"visible_when":{"/service_ref":{"all":[{"path":"/service_source","equals":"DEV test use"}]},"/elasticsearch_service_ref":{"all":[{"path":"/service_source","equals":"自行提供 Elasticsearch"}]},"/vector_name":false}}},{"descriptor_version":"0.2-draft","module":"inference_input","component_id":"platform","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"request_parameters":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","minLength":1,"title":"參數名稱"},"type":{"type":"string","enum":["string","integer","number","boolean","array","object"],"title":"型別"},"required":{"type":"boolean","title":"必填"},"default_value":{"type":"string","title":"預設值（JSON）"}},"required":["name","type","required"],"additionalProperties":false},"title":"Request 參數"}},"required":[],"additionalProperties":false},"io":{"input":"InferenceRequest","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/request_parameters"],"fixed_filters":"advanced"}},{"descriptor_version":"0.2-draft","module":"query_transformation","component_id":"none","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"retrieval","component_id":"builtin","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"vector_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"向量欄位"},"fulltext_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"全文欄位"},"per_route_k":{"type":"integer","minimum":1,"title":"每路 Top K"},"fusion":{"type":"string","enum":["RRF","Sum Score"],"title":"同 Query 多路融合"},"group_by":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"Group by 合併欄位"},"top_n":{"type":"integer","minimum":1,"title":"Top N"},"rrf_k":{"type":"integer","minimum":1,"title":"RRF k"}},"required":["per_route_k"],"additionalProperties":false,"anyOf":[{"required":["vector_fields"]},{"required":["fulltext_fields"]}]},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{"/vector_fields/*":{"source":"index_plan.vectors"},"/fulltext_fields/*":{"source":"index_plan.fulltext"},"/group_by/*":{"source":"candidate.document_fields","types":["string"]}},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/vector_fields","/fulltext_fields","/per_route_k","/fusion","/group_by","/top_n"],"advanced":["/rrf_k"],"visible_when":{"/fusion":{"all":[{"paths":["/vector_fields","/fulltext_fields"],"minimum_selected":2}]},"/rrf_k":{"all":[{"paths":["/vector_fields","/fulltext_fields"],"minimum_selected":2},{"path":"/fusion","equals":"RRF"}]}}}},{"descriptor_version":"0.2-draft","module":"rerank","component_id":"none","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]}],"resources":{"profiles":{"text-v1":{"label":"text-v1","dimensions":3}},"tokenizer_profiles":{"fixture":{"label":"DEV Tokenizer"}},"models":{"default-llm":{"label":"DEV LLM"}},"elasticsearch_services":{"dev-search":{"label":"DEV Elasticsearch"}}}},"config":{"contract_version":"0.2-draft","pipelines":{"ingestion":{"import":{"component_id":"platform","component_version":"1.0.0","parameters":{"structdata":{"body":{"type":"string","required":true},"title":{"type":"string","required":true,"filterable":true},"price":{"type":"number","required":false,"searchable":false,"filterable":false},"tags":{"type":"string_array","required":false,"searchable":false,"filterable":true}}}},"parsing":{"component_id":"passthrough","component_version":"1.0.0","parameters":{}},"chunking":{"component_id":"recursive","component_version":"1.0.0","parameters":{"split_field":"body","output_field":"text","copy_fields":[{"source_field":"title","output_field":"title"},{"source_field":"price","output_field":"price"},{"source_field":"tags","output_field":"tags"}],"max_tokens":500,"overlap_tokens":50,"tokenizer_profile_id":"fixture"}},"embedding":{"component_id":"dense","component_version":"1.0.0","parameters":{"source_field":"text","vector_name":"text","profile":"text-v1"}},"indexing":{"component_id":"elasticsearch","component_version":"1.0.0","parameters":{"service_ref":"dev-search","vector_name":"text","structdata_overrides":{"text":{"searchable":true},"price":{"filterable":true}}}}},"inference":{"inference_input":{"component_id":"platform","component_version":"1.0.0","parameters":{}},"query_transformation":{"component_id":"none","component_version":"1.0.0","parameters":{}},"retrieval":{"component_id":"builtin","component_version":"1.0.0","parameters":{"per_route_k":10,"vector_fields":["text"]}},"rerank":{"component_id":"none","component_version":"1.0.0","parameters":{}},"fixed_filters":[{"field":"structdata.price","operator":"gte","value":300}]}}},"ingestion":{"documents":[{"document_id":"guide-1","structdata":{"body":"定期清潔散熱孔。","title":"設備保養","price":350}}]},"query":{"query":"散熱孔怎麼清潔？","filters":[{"field":"structdata.price","operator":"lt","value":500}]},"schemas":{"ingestion_request":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://rag-builder.example/schemas/ingestion_request.schema.json","type":"object","properties":{"documents":{"type":"array","minItems":1,"items":{"allOf":[{"$ref":"https://rag-builder.example/schemas/document.schema.json"},{"anyOf":[{"required":["structdata"]},{"required":["content"]}],"properties":{"vectors":{"maxProperties":0}}}]}},"parameters":{"type":"object"}},"required":["documents"],"additionalProperties":false},"document":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://rag-builder.example/schemas/document.schema.json","title":"Document","type":"object","properties":{"document_id":{"type":"string","minLength":1},"source_revision":{"type":["string","null"]},"data_id":{"type":"string","minLength":1},"structdata":{"type":"object","additionalProperties":{"oneOf":[{"type":["string","number","boolean"]},{"type":"array","items":{"type":"string"}}]}},"content":{"type":"object","properties":{"media_type":{"type":"string","minLength":1},"uri":{"type":"string","minLength":1},"base64":{"type":"string","minLength":1}},"required":["media_type"],"additionalProperties":false,"oneOf":[{"required":["uri"]},{"required":["base64"]}]},"metadata":{"type":"object"},"vectors":{"type":"object","additionalProperties":{"$ref":"#/$defs/denseVector"}}},"required":["document_id"],"additionalProperties":false,"$defs":{"denseVector":{"type":"object","properties":{"values":{"type":"array","minItems":1,"items":{"type":"number"}},"embedding_profile_id":{"type":"string","minLength":1},"source_field":{"type":"string","minLength":1}},"required":["values","embedding_profile_id","source_field"],"additionalProperties":false},"candidate":{"allOf":[{"$ref":"#"},{"required":["document_id","data_id","structdata"]}]}}},"data_meta":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://rag-builder.example/schemas/data_meta.schema.json","title":"Data Meta Schema for Document.structdata","$ref":"#/$defs/structdata","$defs":{"field_type":{"enum":["string","string_array","integer","number","boolean","date","datetime"]},"field":{"type":"object","properties":{"type":{"$ref":"#/$defs/field_type"},"required":{"type":"boolean"},"searchable":{"type":"boolean","default":false},"filterable":{"type":"boolean","default":false}},"required":["type","required"],"additionalProperties":false,"if":{"properties":{"type":{"not":{"const":"string"}}}},"then":{"properties":{"searchable":{"const":false}}}},"structdata":{"type":"object","propertyNames":{"minLength":1},"additionalProperties":{"$ref":"#/$defs/field"}},"overrides":{"type":"object","propertyNames":{"minLength":1},"additionalProperties":{"type":"object","properties":{"searchable":{"type":"boolean"},"filterable":{"type":"boolean"}},"required":[],"additionalProperties":false,"minProperties":1}},"date":{"type":"string","format":"date","pattern":"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},"datetime":{"type":"string","format":"date-time","pattern":"^[0-9]{4}-[0-9]{2}-[0-9]{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])$"}}},"inference_request":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://rag-builder.example/schemas/inference_request.schema.json","type":"object","properties":{"query":{"type":"string","minLength":1},"filters":{"$ref":"https://rag-builder.example/schemas/query_context.schema.json#/$defs/filters"},"metadata":{"type":"object"},"parameters":{"type":"object"}},"required":["query"],"additionalProperties":false},"query_context":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://rag-builder.example/schemas/query_context.schema.json","type":"array","minItems":1,"items":{"type":"object","properties":{"ori_query":{"type":"string","minLength":1},"query":{"type":"string","minLength":1},"filters":{"$ref":"#/$defs/filters"},"result_sets":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string","minLength":1},"items":{"type":"array","items":{"type":"object","properties":{"data":{"$ref":"https://rag-builder.example/schemas/document.schema.json#/$defs/candidate"},"score":{"type":"number"}},"required":["data"],"additionalProperties":false}}},"required":["key","items"],"additionalProperties":false}},"metadata":{"type":"object"}},"required":["ori_query","query","filters","result_sets","metadata"],"additionalProperties":false},"$defs":{"filter":{"oneOf":[{"$ref":"#/$defs/filter_condition"},{"$ref":"#/$defs/any_filter"}]},"filters":{"type":"array","items":{"$ref":"#/$defs/filter"}},"filter_condition":{"type":"object","properties":{"field":{"type":"string","pattern":"^structdata\\..+$"},"operator":{"enum":["eq","in","gt","gte","lt","lte"]},"value":{}},"required":["field","operator","value"],"additionalProperties":false,"if":{"properties":{"operator":{"const":"in"}}},"then":{"properties":{"value":{"type":"array","minItems":1,"items":{"type":["string","number","boolean"]}}}},"else":{"properties":{"value":{"type":["string","number","boolean"]}}}},"any_filter":{"type":"object","properties":{"any":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/filter_condition"}}},"required":["any"],"additionalProperties":false}}},"index_binding":{"$defs":{"JsonValue":{},"VectorIndexBinding":{"additionalProperties":false,"description":"D-55 entry under IndexBinding.vector_bindings; key is vector name.","properties":{"embedding_profile_id":{"minLength":1,"title":"Embedding Profile Id","type":"string"},"source_field":{"minLength":1,"title":"Source Field","type":"string"},"dimensions":{"minimum":1,"title":"Dimensions","type":"integer"}},"required":["embedding_profile_id","source_field","dimensions"],"title":"VectorIndexBinding","type":"object"}},"additionalProperties":false,"description":"D-55 single logical index contract. Validate registered artifact target and Retrieval compatibility separately; this shape is not a readiness check.","properties":{"artifact_type":{"minLength":1,"title":"Artifact Type","type":"string"},"target":{"additionalProperties":{"$ref":"#/$defs/JsonValue"},"title":"Target","type":"object"},"fulltext_fields":{"items":{"pattern":"^structdata\\..+$","type":"string"},"title":"Fulltext Fields","type":"array","uniqueItems":true},"filter_fields":{"items":{"pattern":"^structdata\\..+$","type":"string"},"title":"Filter Fields","type":"array","uniqueItems":true},"vector_bindings":{"additionalProperties":{"$ref":"#/$defs/VectorIndexBinding"},"propertyNames":{"minLength":1},"title":"Vector Bindings","type":"object"}},"required":["artifact_type"],"title":"IndexBinding","type":"object","$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:retrieval-builder:index-binding:0.2-draft"}},"simulation_parameters":{"import":{"type":"object","properties":{"structdata":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json"}},"required":["structdata"],"additionalProperties":false},"parsing":{"type":"object","properties":{},"required":[],"additionalProperties":false},"chunking":{"type":"object","properties":{"split_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1},"copy_fields":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1}},"required":["source_field","output_field"],"additionalProperties":false}},"max_tokens":{"type":"integer","minimum":1},"overlap_tokens":{"type":"integer","minimum":0},"tokenizer_profile_id":{"type":"string","minLength":1}},"required":["split_field","output_field","copy_fields","max_tokens","overlap_tokens","tokenizer_profile_id"],"additionalProperties":false},"embedding":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"vector_name":{"type":"string","minLength":1},"profile":{"type":"string","minLength":1}},"required":["source_field","vector_name","profile"],"additionalProperties":false},"indexing":{"type":"object","properties":{"service_ref":{"type":"string","minLength":1},"vector_name":{"type":"string","minLength":1},"structdata_overrides":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json#/$defs/overrides"}},"required":["service_ref","vector_name"],"additionalProperties":false},"inference_input":{"type":"object","properties":{"request_parameters":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","minLength":1,"title":"參數名稱"},"type":{"type":"string","enum":["string","integer","number","boolean","array","object"],"title":"型別"},"required":{"type":"boolean","title":"必填"},"default_value":{"type":"string","title":"預設值（JSON）"}},"required":["name","type","required"],"additionalProperties":false},"title":"Request 參數"}},"required":[],"additionalProperties":false},"query_transformation":{"type":"object","properties":{},"required":[],"additionalProperties":false},"retrieval":{"type":"object","properties":{"vector_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"向量欄位"},"fulltext_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"全文欄位"},"per_route_k":{"type":"integer","minimum":1,"title":"每路 Top K"},"fusion":{"type":"string","enum":["RRF","Sum Score"],"title":"同 Query 多路融合"},"group_by":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"Group by 合併欄位"},"top_n":{"type":"integer","minimum":1,"title":"Top N"},"rrf_k":{"type":"integer","minimum":1,"title":"RRF k"}},"required":["per_route_k"],"additionalProperties":false,"anyOf":[{"required":["vector_fields"]},{"required":["fulltext_fields"]}]},"rerank":{"type":"object","properties":{},"required":[],"additionalProperties":false}}}
+</script>
+<script type="application/json" id="builder-form-descriptors">
+[{"descriptor_version":"0.2-draft","module":"import","component_id":"platform","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"structdata":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json"},"source":{"type":"string","enum":["structdata","content"],"default":"structdata","title":"入口資料形式"},"request_parameters":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","minLength":1,"title":"參數名稱"},"type":{"type":"string","enum":["string","integer","number","boolean","array","object"],"title":"型別"},"required":{"type":"boolean","title":"必填"},"default_value":{"type":"string","title":"預設值（JSON）"}},"required":["name","type","required"],"additionalProperties":false},"title":"Request 參數"}},"required":["structdata"],"additionalProperties":false},"io":{"input":"IngestionRequest","output":"Document"},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true},"ingestion_request":{"collapsed":true}},"order":["/source","/structdata"],"advanced":["/request_parameters"],"controls":{"/structdata":"structdata_editor"}}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"passthrough","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"pdf","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"preserve_headings":{"type":"boolean","default":false,"title":"保留 Markdown 標題"}},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]","content_media_types":["application/pdf"]},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/preserve_headings"]}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"pdf_ocr","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"preserve_headings":{"type":"boolean","default":false,"title":"保留 Markdown 標題"}},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]","content_media_types":["application/pdf"]},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/preserve_headings"]}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"office","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"preserve_headings":{"type":"boolean","default":false,"title":"保留 Markdown 標題"}},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]","content_media_types":["application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.presentationml.presentation","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/preserve_headings"]}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"image_ocr","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"preserve_headings":{"type":"boolean","default":false,"title":"保留 Markdown 標題"}},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]","content_media_types":["image/png","image/jpeg"]},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/preserve_headings"]}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"text","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"preserve_headings":{"type":"boolean","default":false,"title":"保留 Markdown 標題"}},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]","content_media_types":["text/plain","text/markdown"]},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/preserve_headings"]}},{"descriptor_version":"0.2-draft","module":"parsing","component_id":"json","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"preserve_headings":{"type":"boolean","default":false,"title":"保留 Markdown 標題"}},"required":[],"additionalProperties":false},"io":{"input":"Document","output":"Document[]","content_media_types":["application/json"]},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/preserve_headings"]}},{"descriptor_version":"0.2-draft","module":"chunking","component_id":"recursive","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"split_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1},"copy_fields":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1}},"required":["source_field","output_field"],"additionalProperties":false}},"max_tokens":{"type":"integer","minimum":1},"overlap_tokens":{"type":"integer","minimum":0},"tokenizer_profile_id":{"type":"string","minLength":1},"separators":{"type":"array","title":"分隔符順序","items":{"type":"string","title":"分隔符"}},"keep_separator":{"type":"boolean","title":"保留分隔符"},"preserve_original":{"type":"boolean","title":"複製完整原文"},"include_original_chunk":{"type":"boolean","title":"額外保留原文 Chunk"}},"required":["split_field","output_field","copy_fields","max_tokens","overlap_tokens","tokenizer_profile_id"],"additionalProperties":false},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/split_field":{"source":"input.structdata","types":["string"],"required":true},"/tokenizer_profile_id":{"source":"tokenizer_profiles"},"/copy_fields/*/source_field":{"source":"input.structdata","types":["string","string_array","integer","number","boolean","date","datetime"]}},"data_rules":[{"op":"declare","target":"/output_field","schema":{"type":"string","required":true}},{"op":"copy","source":"/source_field","target":"/output_field","for_each":"/copy_fields"}],"constraints":[{"op":"lt","left":"/overlap_tokens","right":"/max_tokens"}],"ui_hints":{"advanced":["/copy_fields","/overlap_tokens","/separators","/keep_separator","/preserve_original","/include_original_chunk"]}},{"descriptor_version":"0.2-draft","module":"chunking","component_id":"fixed_size","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"split_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1},"copy_fields":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1}},"required":["source_field","output_field"],"additionalProperties":false}},"max_tokens":{"type":"integer","minimum":1},"overlap_tokens":{"type":"integer","minimum":0},"tokenizer_profile_id":{"type":"string","minLength":1},"preserve_original":{"type":"boolean","title":"複製完整原文"},"include_original_chunk":{"type":"boolean","title":"額外保留原文 Chunk"}},"required":["split_field","output_field","copy_fields","max_tokens","overlap_tokens","tokenizer_profile_id"],"additionalProperties":false},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/split_field":{"source":"input.structdata","types":["string"],"required":true},"/tokenizer_profile_id":{"source":"tokenizer_profiles"},"/copy_fields/*/source_field":{"source":"input.structdata","types":["string","string_array","integer","number","boolean","date","datetime"]}},"data_rules":[{"op":"declare","target":"/output_field","schema":{"type":"string","required":true}},{"op":"copy","source":"/source_field","target":"/output_field","for_each":"/copy_fields"}],"constraints":[{"op":"lt","left":"/overlap_tokens","right":"/max_tokens"}],"ui_hints":{"advanced":["/copy_fields","/overlap_tokens","/preserve_original","/include_original_chunk"]}},{"descriptor_version":"0.2-draft","module":"chunking","component_id":"header_aware","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"split_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1},"copy_fields":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1},"output_field":{"type":"string","minLength":1}},"required":["source_field","output_field"],"additionalProperties":false}},"max_tokens":{"type":"integer","minimum":1},"overlap_tokens":{"type":"integer","minimum":0},"tokenizer_profile_id":{"type":"string","minLength":1},"separators":{"type":"array","title":"分隔符順序","items":{"type":"string","title":"分隔符"}},"keep_separator":{"type":"boolean","title":"保留分隔符"},"preserve_original":{"type":"boolean","title":"複製完整原文"},"include_original_chunk":{"type":"boolean","title":"額外保留原文 Chunk"},"header_levels":{"type":"array","title":"標題層級","items":{"type":"integer","title":"層級","minimum":1},"default":[1,2,3]}},"required":["split_field","output_field","copy_fields","max_tokens","overlap_tokens","tokenizer_profile_id"],"additionalProperties":false},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/split_field":{"source":"input.structdata","types":["string"],"required":true},"/tokenizer_profile_id":{"source":"tokenizer_profiles"},"/copy_fields/*/source_field":{"source":"input.structdata","types":["string","string_array","integer","number","boolean","date","datetime"]}},"data_rules":[{"op":"declare","target":"/output_field","schema":{"type":"string","required":true}},{"op":"copy","source":"/source_field","target":"/output_field","for_each":"/copy_fields"}],"constraints":[{"op":"lt","left":"/overlap_tokens","right":"/max_tokens"}],"ui_hints":{"advanced":["/copy_fields","/overlap_tokens","/separators","/keep_separator","/preserve_original","/include_original_chunk","/header_levels"]}},{"descriptor_version":"0.2-draft","module":"embedding","component_id":"dense","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"profile":{"type":"string","minLength":1,"description":"向量空間的識別。Profile 定義模型與版本、向量維度及文件／查詢的編碼設定。Retrieval 需使用相容的 Query Encoder。"},"service_source":{"type":"string","enum":["DEV test use","Embedding API"],"default":"DEV test use","title":"服務來源"},"embedding_service_ref":{"type":"string","minLength":1,"title":"Embedding 服務引用"},"embedding_model":{"type":"string","minLength":1,"title":"模型"},"dimensions":{"type":"integer","minimum":1,"title":"向量維度"},"mappings":{"type":"array","items":{"type":"object","properties":{"source_field":{"type":"string","minLength":1,"title":"來源欄位"},"vector_name":{"type":"string","minLength":1,"title":"向量欄位"}},"required":["source_field","vector_name"],"additionalProperties":false},"title":"向量映射","minItems":1,"default":[{"source_field":"text","vector_name":"text"}]},"compose_text":{"type":"boolean","default":false,"title":"啟用組合文字"},"composition_field":{"type":"string","minLength":1,"default":"embedding_text","title":"組合輸出欄位"},"composition_template":{"type":"string","minLength":1,"title":"文字模板","default":"標題：{{structdata.title}}\n內容：{{structdata.text}}"}},"required":["mappings","profile"],"additionalProperties":false,"allOf":[{"if":{"required":["compose_text"],"properties":{"compose_text":{"const":true}}},"then":{"required":["composition_field","composition_template"]}}]},"io":{"input":"Document[]","output":"Document[]"},"option_sources":{"/profile":{"source":"profiles"},"/mappings/*/source_field":{"source":"input.structdata","types":["string"],"required":true}},"data_rules":[{"op":"compose","enabled":"/compose_text","target":"/composition_field","template":"/composition_template"},{"op":"vector","for_each":"/mappings","source":"/source_field","target":"/vector_name","profile":"/profile"}],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/mappings"],"groups":[{"title":"組合文字欄位","fields":["/compose_text","/composition_field","/composition_template"],"example":{"原始 structdata":{"title":"維護指南","text":"定期清潔濾網"},"文字模板":"標題：{{structdata.title}}\n內容：{{structdata.text}}","產生的 structdata.embedding_text":"標題：維護指南\n內容：定期清潔濾網","向量映射":{"source_field":"embedding_text","vector_name":"combined"}}},{"title":"Embedding 模型設定","fields":["/service_source","/profile","/embedding_service_ref","/embedding_model","/dimensions"]}],"controls":{"/composition_template":"textarea"},"visible_when":{"/embedding_service_ref":{"all":[{"path":"/service_source","equals":"Embedding API"}]},"/embedding_model":{"all":[{"path":"/service_source","equals":"Embedding API"}]},"/dimensions":{"all":[{"path":"/service_source","equals":"Embedding API"}]},"/composition_field":{"all":[{"path":"/compose_text","equals":true}]},"/composition_template":{"all":[{"path":"/compose_text","equals":true}]}}}},{"descriptor_version":"0.2-draft","module":"indexing","component_id":"elasticsearch","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"service_ref":{"type":"string","minLength":1},"vector_name":{"type":"string","minLength":1,"deprecated":true},"structdata_overrides":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json#/$defs/overrides"},"service_source":{"type":"string","enum":["DEV test use","自行提供 Elasticsearch"],"default":"DEV test use","title":"服務來源"},"elasticsearch_service_ref":{"type":"string","minLength":1,"title":"外部 Elasticsearch 服務引用"},"vector_fields":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true,"title":"向量欄位"}},"required":["service_ref"],"additionalProperties":false,"not":{"required":["vector_name","vector_fields"]}},"io":{"input":"Document[]","output":"IndexBinding"},"option_sources":{"/service_ref":{"source":"elasticsearch_services"},"/vector_name":{"source":"input.vectors"},"/vector_fields/*":{"source":"input.vectors"}},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/service_source","/service_ref","/elasticsearch_service_ref","/structdata_overrides","/vector_fields"],"controls":{"/vector_fields":"vector_checklist","/structdata_overrides":"structdata_overrides_editor"},"visible_when":{"/service_ref":{"all":[{"path":"/service_source","equals":"DEV test use"}]},"/elasticsearch_service_ref":{"all":[{"path":"/service_source","equals":"自行提供 Elasticsearch"}]},"/vector_name":false}}},{"descriptor_version":"0.2-draft","module":"indexing","component_id":"local","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"vector_name":{"type":"string","minLength":1,"deprecated":true},"structdata_overrides":{"$ref":"https://rag-builder.example/schemas/data_meta.schema.json#/$defs/overrides"},"service_source":{"type":"string","enum":["DEV test use","自行提供 MongoDB"],"default":"DEV test use","title":"服務來源"},"vector_fields":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true,"title":"向量欄位"},"persistence":{"type":"string","enum":["memory","mongodb"],"default":"memory","title":"持久化"},"mongo_service_ref":{"type":"string","minLength":1,"title":"MongoDB 服務引用"},"database":{"type":"string","minLength":1,"title":"資料庫"},"collection":{"type":"string","minLength":1,"title":"Collection"}},"required":["persistence"],"additionalProperties":false,"not":{"required":["vector_name","vector_fields"]}},"io":{"input":"Document[]","output":"IndexBinding"},"option_sources":{"/vector_name":{"source":"input.vectors"},"/vector_fields/*":{"source":"input.vectors"}},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/persistence","/service_source","/mongo_service_ref","/database","/collection","/structdata_overrides","/vector_fields"],"controls":{"/vector_fields":"vector_checklist","/structdata_overrides":"structdata_overrides_editor"},"visible_when":{"/service_source":{"all":[{"path":"/persistence","equals":"mongodb"}]},"/mongo_service_ref":{"all":[{"path":"/persistence","equals":"mongodb"},{"path":"/service_source","equals":"自行提供 MongoDB"}]},"/database":{"all":[{"path":"/persistence","equals":"mongodb"},{"path":"/service_source","equals":"自行提供 MongoDB"}]},"/collection":{"all":[{"path":"/persistence","equals":"mongodb"},{"path":"/service_source","equals":"自行提供 MongoDB"}]},"/vector_name":false}}},{"descriptor_version":"0.2-draft","module":"inference_input","component_id":"platform","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"request_parameters":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","minLength":1,"title":"參數名稱"},"type":{"type":"string","enum":["string","integer","number","boolean","array","object"],"title":"型別"},"required":{"type":"boolean","title":"必填"},"default_value":{"type":"string","title":"預設值（JSON）"}},"required":["name","type","required"],"additionalProperties":false},"title":"Request 參數"}},"required":[],"additionalProperties":false},"io":{"input":"InferenceRequest","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"advanced":["/request_parameters"],"fixed_filters":"advanced"}},{"descriptor_version":"0.2-draft","module":"query_transformation","component_id":"none","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"query_transformation","component_id":"rewrite","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"llm_ref":{"type":"string","minLength":1,"title":"共用 LLM 引用","default":"default-llm"},"prompt":{"type":"string","pattern":"\\S","title":"Rewrite Prompt","default":"以不同搜尋角度產生 {{count}} 個檢索問題。\n問題：{{query}}"},"count":{"type":"integer","minimum":1,"title":"改寫數量","default":1},"include_original":{"type":"boolean","title":"同時檢索原始問題","default":false},"cross_query_at":{"type":"string","title":"跨 Query 融合時點","enum":["Retrieval 後","Rerank 後"],"default":"Retrieval 後"},"cross_query_method":{"type":"string","title":"跨 Query 融合策略","enum":["RRF","Sum Score"],"default":"RRF"},"cross_query_group_by":{"type":"array","title":"跨 Query 分組欄位","items":{"type":"string","title":"欄位","minLength":1},"minItems":1,"uniqueItems":true},"cross_query_top_n":{"type":"integer","title":"跨 Query Top N","minimum":1}},"required":["llm_ref","prompt","count","include_original"],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{"/llm_ref":{"source":"models"},"/cross_query_group_by/*":{"source":"candidate.document_fields","types":["string"]}},"ui_hints":{"controls":{"/prompt":"textarea"},"advanced":["/cross_query_at","/cross_query_method","/cross_query_group_by","/cross_query_top_n"],"visible_when":{"/cross_query_at":{"any":[{"path":"/count","minimum":2},{"path":"/include_original","equals":true}]},"/cross_query_method":{"any":[{"path":"/count","minimum":2},{"path":"/include_original","equals":true}]},"/cross_query_group_by":{"any":[{"path":"/count","minimum":2},{"path":"/include_original","equals":true}]},"/cross_query_top_n":{"any":[{"path":"/count","minimum":2},{"path":"/include_original","equals":true}]}}}},{"descriptor_version":"0.2-draft","module":"retrieval","component_id":"builtin","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{"vector_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"向量欄位"},"fulltext_fields":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"全文欄位"},"per_route_k":{"type":"integer","minimum":1,"title":"每路 Top K"},"fusion":{"type":"string","enum":["RRF","Sum Score"],"title":"同 Query 多路融合"},"group_by":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"Group by 合併欄位"},"top_n":{"type":"integer","minimum":1,"title":"Top N"},"rrf_k":{"type":"integer","minimum":1,"title":"RRF k"}},"required":["per_route_k"],"additionalProperties":false,"anyOf":[{"required":["vector_fields"]},{"required":["fulltext_fields"]}]},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{"/vector_fields/*":{"source":"index_plan.vectors"},"/fulltext_fields/*":{"source":"index_plan.fulltext"},"/group_by/*":{"source":"candidate.document_fields","types":["string"]}},"data_rules":[],"constraints":[],"ui_hints":{"previews":{"effective_io":{"collapsed":true}},"order":["/vector_fields","/fulltext_fields","/per_route_k","/fusion","/group_by","/top_n"],"advanced":["/rrf_k"],"visible_when":{"/fusion":{"all":[{"paths":["/vector_fields","/fulltext_fields"],"minimum_selected":2}]},"/rrf_k":{"all":[{"paths":["/vector_fields","/fulltext_fields"],"minimum_selected":2},{"path":"/fusion","equals":"RRF"}]}}}},{"descriptor_version":"0.2-draft","module":"rerank","component_id":"none","component_version":"1.0.0","parameters_schema":{"type":"object","properties":{},"required":[],"additionalProperties":false},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{},"data_rules":[],"constraints":[]},{"descriptor_version":"0.2-draft","module":"rerank","component_id":"model_api","component_version":"1.0.0","parameters_schema":{"type":"object","required":["text_field"],"additionalProperties":false,"properties":{"service_source":{"type":"string","enum":["DEV test use","Rerank API"],"default":"DEV test use","title":"服務來源"},"rerank_service_ref":{"type":"string","minLength":1,"title":"Rerank 服務引用"},"model":{"type":"string","minLength":1,"default":"demo-reranker","title":"模型"},"text_field":{"type":"string","minLength":1,"default":"text","title":"評分內容欄位"},"query_source":{"type":"string","enum":["原始問題","當前 Query"],"default":"原始問題","title":"提問來源"},"top_n":{"type":"integer","minimum":1,"default":3,"title":"Rerank Top N"},"group_by":{"type":"array","items":{"type":"string","minLength":1},"minItems":1,"uniqueItems":true,"title":"分組欄位"},"timeout_ms":{"type":"integer","minimum":1,"title":"Timeout（ms）"}}},"io":{"input":"QueryContext[]","output":"QueryContext[]"},"option_sources":{"/text_field":{"source":"candidate.structdata","types":["string"],"required":true},"/group_by/*":{"source":"candidate.document_fields","types":["string"]}},"data_rules":[],"constraints":[],"ui_hints":{"advanced":["/group_by","/timeout_ms"],"previews":{"effective_io":{"collapsed":true}},"visible_when":{"/rerank_service_ref":{"all":[{"path":"/service_source","equals":"Rerank API"}]}}}}]
 </script>
 <script>
 'use strict';
@@ -198,23 +203,24 @@ const makeButton = (title, action, options = '') => `<button class="btn ${option
 const badge = (title, kind = '') => `<span class="badge ${kind}">${title}</span>`;
 const status = {queued:'已排入',running:'處理中',completed:'已完成',partial:'部分失敗',failed:'失敗',unknown:'狀態未知'};
 const labels = {
-  import:'Import', parsing:'Parsing', chunking:'Chunking', embedding:'Embedding', indexing:'Indexing',
+  other_settings:'其他設定', import:'Import', parsing:'Parsing', chunking:'Chunking', embedding:'Embedding', indexing:'Indexing',
   inference_input:'Inference Input', query_transformation:'Query Transformation', retrieval:'Retrieval', rerank:'Rerank',
   structdata:'文件欄位', split_field:'切分來源', output_field:'輸出欄位', copy_fields:'複製欄位',
   max_tokens:'切分上限（tokens）', overlap_tokens:'重疊長度（tokens）', tokenizer_profile_id:'Tokenizer',
   source_field:'來源欄位', vector_name:'向量欄位', profile:'Embedding Profile', service_ref:'Elasticsearch 服務',
-  structdata_overrides:'索引欄位用途', query_profile:'查詢 Embedding Profile', per_route_k:'每路 Top K',
+  structdata_overrides:'索引欄位用途', per_route_k:'每路 Top K',
   fulltext_fields:'全文欄位', group_by:'分組欄位', fixed_filters:'固定 Filter'
 };
 const componentNames = {
   platform:'平台預設',passthrough:'結構化 JSON',pdf:'PDF · 文字擷取',pdf_ocr:'PDF · OCR',
-  office:'Office · Word／PowerPoint／Excel',image:'圖片 · OCR',text:'TXT／Markdown · 純文字',
+  office:'Office · Word／PowerPoint／Excel',image_ocr:'圖片 · OCR',text:'TXT／Markdown · 純文字',
   json:'巢狀 JSON · 文字擷取',fixed_size:'Fixed-size',recursive:'Recursive',header_aware:'Header-aware',
   dense:'Dense Embedding',elasticsearch:'Elasticsearch',local:'Local Search',none:'停用',rewrite:'Rewrite',
   builtin:'內建檢索',model_api:'Rerank 服務',remote_api:'Remote API'
 };
-const displayNames = {'dev-search':'DEV Elasticsearch',fixture:'DEV Tokenizer','text-v1':'text-v1'};
-const types = ['string','string_array','integer','number','boolean','date','datetime'];
+const displayNames = {
+  structdata:'已整理欄位（structdata）',content:'待解析來源（content，可附 structdata）',memory:'Memory',mongodb:'MongoDB','dev-search':'DEV Elasticsearch',fixture:'DEV Tokenizer','text-v1':'text-v1'};
+const types = fixture.schemas.data_meta.$defs.field_type.enum;
 const fieldName = /^[^.\s]+$/u;
 const groups = ['Customer Support','Engineering','Operations'];
 const lanes = {ingestion:['import','parsing','chunking','embedding','indexing'], inference:['inference_input','query_transformation','retrieval','rerank']};
@@ -225,103 +231,29 @@ const laneOf = module => lanes.ingestion.includes(module) ? 'ingestion' : 'infer
 const prefix = module => `/config/pipelines/${laneOf(module)}/${module}/parameters`;
 const node = (config,module) => config.pipelines[laneOf(module)][module];
 const params = (config,module) => node(config,module).parameters;
-const baseline = Object.fromEntries(fixture.catalog.descriptors.map(item => [item.module,item]));
-
-const str = (title, choices) => ({type:'string',title,enum:choices});
-const num = (title, minimum = 1) => ({type:'integer',title,minimum});
-const bool = title => ({type:'boolean',title});
-const list = (title, items) => ({type:'array',title,items});
-const row = properties => ({type:'object',properties});
-const textArea = title => ({type:'string',title,multiline:true});
-const selectFrom = (source, types, required) => ({source,types,required});
-const parameterList = list('Request 參數',row({
-  name:str('參數名稱'),type:str('型別',['string','integer','number','boolean','array','object']),
-  required:bool('必填'),default_value:str('預設值（JSON）')
-}));
-const separators = {
-  separators:list('分隔符順序',str('分隔符')),
-  keep_separator:bool('保留分隔符')
-};
-const searchPlan = {
-  vector_fields:list('額外向量欄位',str('向量欄位')), fusion:str('同 Query 多路融合',['RRF','Sum Score']),
-  rrf_k:num('RRF k'), top_n:num('Retrieval Top N')
-};
-const mappingSources = {
-  '/mappings/*/source_field':selectFrom('input.structdata',['string'],true)
-};
-const additions = {
-  import:{properties:{request_parameters:parameterList}},
-  chunking:{properties:{...separators,preserve_original:bool('複製完整原文'),include_original_chunk:bool('額外保留原文 Chunk')}},
-  embedding:{properties:{
-    service_source:str('服務來源',['DEV test use','Embedding API']),
-    embedding_service_ref:str('Embedding 服務引用'), embedding_model:str('模型'), dimensions:num('向量維度'),
-    mappings:list('額外向量映射',row({source_field:str('來源欄位'),vector_name:str('向量欄位')})),
-    compose_text:bool('組合文字欄位'),composition_field:str('組合輸出欄位'),composition_template:textArea('文字模板')
-  },sources:mappingSources},
-  indexing:{properties:{
-    service_source:str('服務來源',['DEV test use','自行提供 Elasticsearch']),
-    elasticsearch_service_ref:str('外部 Elasticsearch 服務引用'),
-    vector_fields:list('額外向量欄位',str('向量欄位'))
-  },sources:{'/vector_fields/*':selectFrom('input.vectors')}},
-  inference_input:{properties:{request_parameters:parameterList}},
-  retrieval:{properties:searchPlan,sources:{'/vector_fields/*':selectFrom('index_plan.vectors')}}
-};
-
-function withProperties(item, {properties = {},sources = {},advanced = Object.keys(properties)} = {}) {
-  return {...item,
-    parameters_schema:{...item.parameters_schema,properties:{...item.parameters_schema.properties,...properties}},
-    option_sources:{...item.option_sources,...sources},
-    ui_hints:{advanced:[...(item.ui_hints?.advanced ?? []), ...advanced.map(key => '/' + key)]}
-  };
-}
-
-function planned(module, component_id, properties = {}, defaults = {}, options = {}) {
-  return {module,component_id,component_version:'1.0.0',planned:true,defaults,
-    parameters_schema:{type:'object',properties,required:[]},
-    option_sources:options.sources ?? {},ui_hints:{advanced:(options.advanced ?? []).map(key => '/' + key)}};
-}
-
-const chunkChanges = {preserve_original:bool('複製完整原文'),include_original_chunk:bool('額外保留原文 Chunk')};
-const chunkAlternative = (component, extra = {}, defaults = {}) => {
-  const {properties} = baseline.chunking.parameters_schema;
-  return planned('chunking',component,{...properties,...extra,...chunkChanges},
-    {...clone(params(fixture.config,'chunking')),...defaults},
-    {sources:baseline.chunking.option_sources,advanced:['copy_fields','overlap_tokens',...Object.keys(extra),...Object.keys(chunkChanges)]});
-};
-const plannedMethods = [
-  ...['pdf','pdf_ocr','office','image','text','json'].map(component => planned('parsing',component,{
-    preserve_headings:bool('保留 Markdown 標題')
-  },{preserve_headings:false},{advanced:['preserve_headings']})),
-  chunkAlternative('fixed_size'),
-  chunkAlternative('header_aware',{...separators,header_levels:list('標題層級',num('層級'))},{header_levels:[1,2,3]}),
-  planned('indexing','local',{
-    persistence:str('持久化',['Memory','MongoDB']), mongo_service_ref:str('MongoDB 服務引用'),
-    database:str('資料庫'), collection:str('Collection'),
-    vector_name:str('向量欄位'), vector_fields:list('額外向量欄位',str('向量欄位')),
-    structdata_overrides:baseline.indexing.parameters_schema.properties.structdata_overrides
-  },{persistence:'Memory',vector_name:'text',structdata_overrides:clone(params(fixture.config,'indexing').structdata_overrides)},
-  {sources:{'/vector_name':selectFrom('input.vectors'),'/vector_fields/*':selectFrom('input.vectors')}}),
-  planned('query_transformation','rewrite',{
-    llm_ref:str('共用 LLM 引用'),prompt:textArea('Rewrite Prompt'),count:num('改寫數量'),include_original:bool('同時檢索原始問題'),
-    cross_query_at:str('跨 Query 融合時點',['Retrieval 後','Rerank 後']),cross_query_method:str('跨 Query 融合策略',['RRF','Sum Score']),
-    cross_query_group_by:list('跨 Query 分組欄位',str('欄位')), cross_query_top_n:num('跨 Query Top N')
-  },{llm_ref:'default-llm',prompt:'以不同搜尋角度產生 {{count}} 個檢索問題。\n問題：{{query}}',
-    count:1,include_original:false,cross_query_at:'Retrieval 後',cross_query_method:'RRF'},
-  {sources:{'/cross_query_group_by/*':selectFrom('candidate.document_fields',['string'])},
-    advanced:['cross_query_at','cross_query_method','cross_query_group_by','cross_query_top_n']}),
-  planned('rerank','model_api',{
-    service_source:str('服務來源',['DEV test use','Rerank API']), rerank_service_ref:str('Rerank 服務引用'),
-    model:str('模型'),text_field:str('評分內容欄位'),query_source:str('提問來源',['原始問題','當前 Query']),
-    top_n:num('Rerank Top N'),group_by:list('分組欄位',str('欄位')), timeout_ms:num('Timeout（ms）')
-  },{service_source:'DEV test use',model:'demo-reranker',text_field:'text',query_source:'原始問題',top_n:3},
-  {sources:{'/text_field':selectFrom('input.structdata',['string'],true),'/group_by/*':selectFrom('candidate.document_fields',['string'])},
-    advanced:['group_by','timeout_ms']}),
-  ...Object.values(remoteModules).flat().map(module => planned(module,'remote_api'))
+const baseline = Object.fromEntries(fixture.catalog.descriptors.map(item => [
+  item.module,{...item,parameters_schema:fixture.simulation_parameters[item.module]}
+]));
+const formDescriptors = JSON.parse($('builder-form-descriptors').textContent);
+const resources = fixture.catalog.resources;
+const componentCatalog = [
+  ...formDescriptors,
+  ...Object.values(remoteModules).flat().map(module => ({
+    module,component_id:'remote_api',component_version:'1.0.0',
+    parameters_schema:{type:'object',properties:{},required:[]}
+  })),
 ];
-
-const componentCatalog = [...Object.values(baseline).map(item => withProperties(item,additions[item.module])), ...plannedMethods];
+const importSource = config => params(config,'import').source ?? 'structdata';
+const parserMediaTypes = config => descriptor('parsing',config).io?.content_media_types;
+const parserChoiceAllowed = (item,config) => item.component_id === 'remote_api'
+  || Boolean(item.io?.content_media_types) === (importSource(config) === 'content');
+const indexVectorNames = config => {
+  const index = params(config,'indexing');
+  return [...new Set([index.vector_name,...(index.vector_fields ?? [])].filter(Boolean))];
+};
 const choicesFor = module => componentCatalog.filter(item => item.module === module);
-const descriptor = (module,config) => choicesFor(module).find(item => item.component_id === node(config,module).component_id);
+const catalogId = (module,id) => module === 'parsing' && id === 'image' ? 'image_ocr' : id;
+const descriptor = (module,config) => choicesFor(module).find(item => item.component_id === catalogId(module,node(config,module).component_id));
 
 function remoteOwnership(config, lane) {
   const modules = remoteModules[lane];
@@ -334,13 +266,19 @@ function remoteOwnership(config, lane) {
   return owners;
 }
 
-function needsMoreRuntime(module, config) {
-  const item = descriptor(module, config);
+function outsideW1Preview(module, config) {
+  if (node(config,module).component_id !== baseline[module].component_id) return true;
   const values = params(config,module);
-  if (item.planned) return true;
-  if (module === 'retrieval' && values.fulltext_fields?.length) return true;
+  if (module === 'import' && importSource(config) === 'content') return true;
+  if (module === 'embedding' && embeddingMappings(values).length !== 1) return true;
+  if (module === 'indexing' && indexVectorNames(config).length !== 1) return true;
+  if (module === 'inference_input' && values.request_parameters?.length) return true;
+  if (module === 'retrieval' && (values.fulltext_fields?.length || values.vector_fields?.length > 1)) return true;
   const baseProperties = baseline[module].parameters_schema.properties;
-  return Object.keys(values).some(key => !Object.hasOwn(baseProperties,key) && configuredExtension(key,values));
+  return Object.keys(values).some(key => !(module === 'import' && key === 'source')
+    && !(module === 'indexing' && key === 'vector_fields')
+    && !(module === 'embedding' && key === 'mappings')
+    && !Object.hasOwn(baseProperties,key) && configuredExtension(key,values));
 }
 
 function configuredExtension(key,values) {
@@ -369,8 +307,16 @@ function load() {
   catch { return null; }
 }
 
+function withoutSecretValues(config) {
+  if (!config?.secret) return config;
+  return {...config,secret:Object.fromEntries(Object.keys(config.secret).map(key => [key,null]))};
+}
+
 function persist() {
-  try { localStorage.setItem(storageKey, JSON.stringify(model)); }
+  const systems = model.systems.map(system => ({
+    ...system,draft:withoutSecretValues(system.draft),active:withoutSecretValues(system.active)
+  }));
+  try { localStorage.setItem(storageKey, JSON.stringify({...model,systems})); }
   catch { notify('瀏覽器無法保存這次變更。'); }
 }
 
@@ -396,11 +342,45 @@ function resetOperation() {
   queryText = ''; filterText = '[]'; queryError = ''; queryResult = null;
 }
 
+function embeddingMappings(values) {
+  const {source_field,vector_name,mappings = []} = values;
+  return source_field !== undefined || vector_name !== undefined
+    ? [{source_field,vector_name},...mappings] : mappings;
+}
+
+function normalizeEmbeddingDraft(component) {
+  if (component.component_id !== 'dense') return;
+  const values = component.parameters;
+  values.mappings = embeddingMappings(values);
+  delete values.source_field;
+  delete values.vector_name;
+}
+
+function normalizeRetrievalDraft(component) {
+  if (component.component_id !== 'builtin') return;
+  const values = component.parameters;
+  if (values.vector_name) {
+    values.vector_fields = [values.vector_name,...(values.vector_fields ?? []).filter(field => field !== values.vector_name)];
+    delete values.vector_name;
+  }
+  delete values.query_profile;
+}
+
+function normalizeIndexDraft(component) {
+  const values = component.parameters;
+  if (component.component_id === 'local' && typeof values.persistence === 'string') {
+    values.persistence = values.persistence.toLowerCase();
+  }
+}
+
 function openSystem(systemId, target = 'config') {
   const system = pendingSystem?.id === systemId ? pendingSystem : model.systems.find(entry => entry.id === systemId);
   if (!system) return;
   resetOperation();
   draft = clone(system.draft);
+  normalizeEmbeddingDraft(node(draft,'embedding'));
+  normalizeRetrievalDraft(node(draft,'retrieval'));
+  normalizeIndexDraft(node(draft,'indexing'));
   componentDrafts = clone(system.componentDrafts ?? {});
   draftName = system.name;
   draftDirty = false;
@@ -459,6 +439,7 @@ function render() {
       ${makeButton('取消','close-dialog')}${makeButton('保存草稿','save')}${makeButton('驗證並發布','validate','primary')}`;
   }
   $('page').innerHTML = screen === 'config' ? settings(system) : screen === 'ingest' ? ingestion(system) : inference(system);
+  refreshContractPreviews();
 }
 
 const activeRevision = system => system.active ? 'revision-' + system.revision : null;
@@ -472,7 +453,8 @@ function derive(config) {
   const parsing = remoteAt('parsing');
   const parsed = parsing.component_id === 'remote_api'
     ? declaredFields(parsing.output?.structdata)
-    : parsing.component_id === 'passthrough' ? input : {...input,contenttext:{type:'string',required:true}};
+    : importSource(config) === 'content' && parserMediaTypes(config)
+      ? {...input,contenttext:{type:'string',required:true}} : input;
   const chunking = params(config,'chunking');
   const chunkNode = remoteAt('chunking');
   const chunkFields = chunkNode.component_id === 'remote_api' ? declaredFields(chunkNode.output?.structdata)
@@ -482,15 +464,29 @@ function derive(config) {
     ].filter(([name]) => name));
   const embedNode = remoteAt('embedding');
   const embedding = embedNode.component_id === 'remote_api' ? {} : params(config,'embedding');
-  const fields = embedding.compose_text && embedding.composition_field
-    ? {...chunkFields,[embedding.composition_field]:{type:'string',required:true}} : chunkFields;
-  const vector = embedNode.component_id === 'remote_api' ? Object.keys(declaredFields(embedNode.output?.vectors))
-    : [...new Set([embedding,...(embedding.mappings ?? [])]
-      .filter(entry => fields[entry.source_field]?.type === 'string' && fields[entry.source_field].required)
-      .map(entry => entry.vector_name).filter(Boolean))];
+  const composed = embedding.compose_text && !compositionProblem(embedding,chunkFields);
+  const fields = composed ? {...chunkFields,[embedding.composition_field]:{type:'string',required:true}} : chunkFields;
+  const vectorBindings = embedNode.component_id === 'remote_api' ? declaredFields(embedNode.output?.vectors)
+    : Object.fromEntries(embeddingMappings(embedding)
+      .filter(entry => entry.vector_name && fields[entry.source_field]?.type === 'string' && fields[entry.source_field].required)
+      .map(entry => [entry.vector_name, {
+        source_field:entry.source_field, embedding_profile_id:embedding.profile,
+        dimensions:embedding.dimensions ?? resources.profiles[embedding.profile]?.dimensions
+      }]));
+  const vector = Object.keys(vectorBindings);
   const index = params(config,'indexing');
-  const indexed = Object.fromEntries(Object.entries(fields).map(([key,data]) => [key,{...data,...index.structdata_overrides[key]}]));
-  return {input,parsed,fields,indexed,vector};
+  const indexed = Object.fromEntries(Object.entries(fields).map(([key,data]) => [key,{...data,...index.structdata_overrides?.[key]}]));
+  return {input,parsed,chunkFields,fields,indexed,vector,vectorBindings};
+}
+
+function compositionProblem(embedding,fields) {
+  if (!fieldName.test(embedding.composition_field ?? '')) return '請輸入有效的組合輸出欄位名稱。';
+  if (Object.hasOwn(fields,embedding.composition_field)) return '組合輸出欄位名稱已存在。';
+  const template = embedding.composition_template ?? '';
+  const tokens = /\{\{\s*structdata\.([^{}]+?)\s*\}\}/g;
+  if (!template.trim() || /\{\{|\}\}/.test(template.replace(tokens,''))) return '請使用 {{structdata.欄位}} 引用文字欄位。';
+  const missing = [...template.matchAll(tokens)].map(match => match[1]).find(name => fields[name]?.type !== 'string' || !fields[name]?.required);
+  return missing ? '模板須引用有效且必填的文字欄位：' + missing : '';
 }
 
 function declaredFields(value) {
@@ -498,38 +494,54 @@ function declaredFields(value) {
 }
 
 function optionValues(config, module, path) {
-  const spec = descriptor(module,config).option_sources[path];
+  const item = descriptor(module,config);
+  const spec = item.option_sources?.[path];
   if (!spec) return null;
+  if (Object.hasOwn(resources,spec.source)) return Object.keys(resources[spec.source]);
   const data = derive(config);
   const chooseFields = fields => Object.entries(fields).filter(([,field]) =>
     (!spec.types || spec.types.includes(field.type)) && (!spec.required || field.required)).map(([key]) => key);
   return ({
     'input.structdata': () => chooseFields(module === 'chunking' ? data.parsed : data.fields),
     'input.vectors': () => data.vector,
-    'index_plan.vectors': () => data.vector.filter(value => [params(config,'indexing').vector_name,...(params(config,'indexing').vector_fields ?? [])].includes(value)),
+    'index_plan.vectors': () => data.vector.filter(value => indexVectorNames(config).includes(value)),
     'index_plan.fulltext': () => Object.keys(data.indexed).filter(key => data.indexed[key].searchable).map(key => 'structdata.' + key),
-    'candidate.document_fields': () => ['document_id',...chooseFields(data.indexed).map(key => 'structdata.' + key)],
-    tokenizer_profiles: () => ['fixture'], profiles: () => ['text-v1'], elasticsearch_services: () => ['dev-search']
+    'candidate.structdata': () => chooseFields(data.indexed),
+    'candidate.document_fields': () => ['document_id',...chooseFields(data.indexed).map(key => 'structdata.' + key)]
   })[spec.source]();
 }
 
 function chooseComponent(componentId) {
   const item = choicesFor(selected).find(option => option.component_id === componentId);
   const currentNode = node(draft,selected);
-  if (!item || item.component_id === currentNode.component_id) return;
+  if (!item || item.component_id === currentNode.component_id || selected === 'parsing' && !parserChoiceAllowed(item,draft)) return;
   const variants = componentDrafts[selected] ??= {};
-  variants[currentNode.component_id] = currentNode;
+  variants[catalogId(selected,currentNode.component_id)] = currentNode;
   let next = variants[componentId];
   if (!next) {
+    const useFixture = componentId !== 'remote_api'
+      && (selected === 'chunking' || componentId === baseline[selected].component_id);
     next = {component_id:componentId,component_version:item.component_version,
-      parameters:clone(item.defaults ?? params(fixture.config,selected))};
+      parameters:useFixture ? clone(params(fixture.config,selected)) : {}};
+    if (selected === 'embedding' && componentId === 'dense') normalizeEmbeddingDraft(next);
+    for (const [name,schema] of Object.entries(item.parameters_schema.properties)) {
+      if (Object.hasOwn(schema,'const')) next.parameters[name] = clone(schema.const);
+      else if (Object.hasOwn(schema,'default')) next.parameters[name] ??= clone(schema.default);
+    }
+    if (componentId === 'local') {
+      next.parameters.persistence = 'memory';
+      next.parameters.vector_fields = indexVectorNames(draft);
+      next.parameters.structdata_overrides = clone(params(draft,'indexing').structdata_overrides ?? {});
+    }
     if (componentId === 'remote_api') {
       next.through = selected;
       next.service_ref = '';
       next.connection = {};
       if (laneOf(selected) === 'ingestion') next.output = {structdata:{},vectors:{}};
     }
-  }
+  } else if (selected === 'embedding') normalizeEmbeddingDraft(next);
+  if (selected === 'retrieval') normalizeRetrievalDraft(next);
+  if (selected === 'indexing') normalizeIndexDraft(next);
   draft.pipelines[laneOf(selected)][selected] = next;
   detailOpen = false;
   markDirty();
@@ -537,16 +549,23 @@ function chooseComponent(componentId) {
   $('component-picker')?.focus();
 }
 
-function fieldVisible(key,values) {
-  if (['mongo_service_ref','database','collection'].includes(key)) return values.persistence === 'MongoDB';
-  if (['embedding_service_ref','embedding_model','dimensions'].includes(key)) return values.service_source === 'Embedding API';
-  if (key === 'elasticsearch_service_ref') return values.service_source === '自行提供 Elasticsearch';
-  if (key === 'rerank_service_ref') return values.service_source === 'Rerank API';
-  if (key.startsWith('composition_')) return values.compose_text;
-  if (key.startsWith('cross_query_')) return values.count > 1 || values.include_original;
-  if (key === 'fusion') return searchRouteCount(values) > 1;
-  if (key === 'rrf_k') return searchRouteCount(values) > 1 && values.fusion === 'RRF';
-  return true;
+function fieldVisible(item,key,values) {
+  const rule = item.ui_hints?.visible_when?.['/' + key];
+  if (rule === undefined || typeof rule === 'boolean') return rule ?? true;
+  const valueAt = path => {
+    const name = path.slice(1).replace(/~1/g,'/').replace(/~0/g,'~');
+    return values[name] ?? item.parameters_schema.properties[name].default;
+  };
+  const matches = condition => {
+    if (condition.paths) {
+      const count = condition.paths.reduce((total,path) => total + selectedItemCount(valueAt(path)),0);
+      return count >= condition.minimum_selected;
+    }
+    const value = valueAt(condition.path);
+    return Object.hasOwn(condition,'equals') ? value === condition.equals
+      : typeof value === 'number' && value >= condition.minimum;
+  };
+  return rule.all ? rule.all.every(matches) : rule.any.some(matches);
 }
 
 function remoteSettings(config,module) {
@@ -565,7 +584,7 @@ function remoteSettings(config,module) {
     </select></label>
     ${label('service_ref','Remote 服務引用',currentNode.service_ref)}
     ${label('endpoint','API Endpoint',currentNode.connection.endpoint)}
-    ${label('secret_ref','認證 Secret 引用',currentNode.connection.secret_ref)}
+    ${label('bearer_token','Bearer Token 引用（{{KEYNAME}}，只讀取 System Secret）',currentNode.auth?.bearer_token)}
     <label class="field">Timeout（ms）<input type="number" min="1" class="control" data-remote="timeout_ms" value="${escapeHTML(currentNode.connection.timeout_ms)}"></label>
     ${jsonField('parameters','Request parameters（JSON）',currentNode.parameters)}
     ${lane === 'ingestion' && module !== 'embedding' ? jsonField('structdata','輸出 structdata 欄位宣告（JSON）',currentNode.output.structdata) : ''}
@@ -573,26 +592,230 @@ function remoteSettings(config,module) {
   </div><p class="info">POST · ${inputShape} → ${outputShape}</p>`;
 }
 
-function selectField(value, values, attrs) {
+function selectField(value, values, attrs, entries = {}) {
   const available = values.includes(value);
   return `<select class="control" ${attrs} aria-invalid="${Boolean(value && !available)}">
     ${option('', '請選擇', !value)}${value && !available ? `<option value="${escapeHTML(value)}" selected disabled>${escapeHTML(value)}（已失效）</option>` : ''}
-    ${values.map(item => option(item, Object.hasOwn(displayNames,item) ? displayNames[item] : item, item === value)).join('')}</select>`;
+    ${values.map(item => option(item, entries[item]?.label ?? (Object.hasOwn(displayNames,item) ? displayNames[item] : item), item === value)).join('')}</select>`;
+}
+
+function objectShape(properties, required = []) {
+  return {type:'object', properties, required, additionalProperties:false};
+}
+
+function fieldValueSchema(type) {
+  if (type === 'string_array') return {type:'array',items:{type:'string'}};
+  return fixture.schemas.data_meta.$defs[type] ?? {type};
+}
+
+function documentSchema(fields, {source, mediaTypes, chunk, vectors = {}} = {}) {
+  const shared = fixture.schemas.document;
+  const properties = {
+    document_id:shared.properties.document_id, source_revision:shared.properties.source_revision,
+    structdata:objectShape(
+      Object.fromEntries(Object.entries(fields).map(([name,field]) => [name,fieldValueSchema(field.type)])),
+      Object.keys(fields).filter(name => fields[name].required)
+    ),
+    metadata:shared.properties.metadata
+  };
+  const required = ['document_id'];
+  if (source === 'content') {
+    properties.content = clone(shared.properties.content);
+    if (mediaTypes?.length) properties.content.properties.media_type.enum = mediaTypes;
+    required.push('content');
+  }
+  if (source !== 'content' || properties.structdata.required.length) required.push('structdata');
+  if (chunk) {
+    properties.data_id = shared.properties.data_id;
+    required.push('data_id');
+  }
+  properties.vectors = objectShape(Object.fromEntries(Object.entries(vectors).map(([name,vector]) => {
+    const shape = clone(shared.$defs.denseVector);
+    if (vector.source_field) shape.properties.source_field.const = vector.source_field;
+    if (vector.embedding_profile_id) shape.properties.embedding_profile_id.const = vector.embedding_profile_id;
+    if (Number.isInteger(vector.dimensions) && vector.dimensions > 0) {
+      shape.properties.values.minItems = shape.properties.values.maxItems = vector.dimensions;
+    }
+    return [name,shape];
+  })),Object.keys(vectors));
+  if (Object.keys(vectors).length) required.push('vectors');
+  return objectShape(properties,required);
+}
+
+function parameterPreview(config,module) {
+  const rows = (params(config,module).request_parameters ?? []).filter(row => row.name && row.type);
+  const properties = {};
+  const required = [];
+  for (const row of rows) {
+    const shape = {type:row.type};
+    if (row.default_value?.trim()) {
+      try { shape.default = JSON.parse(row.default_value); }
+      catch { /* Invalid draft values are kept in the editor. */ }
+    }
+    Object.defineProperty(properties,row.name,{value:shape,enumerable:true,configurable:true});
+    if (row.required) required.push(row.name);
+  }
+  return rows.length ? objectShape(properties,[...new Set(required)]) : {type:'object'};
+}
+
+function ingestionRequestSchema(config, document) {
+  const schema = clone(fixture.schemas.ingestion_request);
+  delete schema.$id;
+  schema.properties.documents.items = document;
+  schema.properties.parameters = parameterPreview(config,'import');
+  if (schema.properties.parameters.required?.length) schema.required.push('parameters');
+  return schema;
+}
+
+function exampleForType(schema, sample) {
+  if (Object.hasOwn(schema,'default') && fitsType(schema.default,schema.type)) return schema.default;
+  if (schema.enum?.length) return schema.enum[0];
+  if (schema.format === 'date') return '2026-11-17';
+  if (schema.format === 'date-time') return '2026-11-17T11:00:00+08:00';
+  if (schema.type === 'object') return {};
+  if (schema.type === 'array') return schema.items?.type === 'string' ? ['sample'] : [];
+  if (fitsType(sample,schema.type)) return sample;
+  return {string:'範例文字',integer:1,number:1,boolean:false}[schema.type];
+}
+
+function ingestionExample(schema) {
+  const shape = schema.properties.documents.items;
+  const sample = fixture.ingestion.documents[0].structdata;
+  const document = {document_id:'doc-001'};
+  const fields = shape.properties.structdata.properties;
+  if (Object.keys(fields).length || shape.required.includes('structdata')) {
+    document.structdata = Object.fromEntries(Object.entries(fields).map(([name,field]) => [name,exampleForType(field,sample[name])]));
+  }
+  if (shape.properties.content) {
+    document.content = {
+      media_type:shape.properties.content.properties.media_type.enum?.[0] ?? 'application/octet-stream',
+      uri:'https://example.invalid/document'
+    };
+  }
+  const request = {documents:[document]};
+  const parameters = schema.properties.parameters.properties;
+  if (parameters && Object.keys(parameters).length) {
+    request.parameters = Object.fromEntries(Object.entries(parameters).map(([name,field]) => [name,exampleForType(field)]));
+  }
+  return request;
+}
+
+function effectiveContracts(config) {
+  const data = derive(config);
+  const source = importSource(config);
+  const document = documentSchema(data.input,{source,mediaTypes:parserMediaTypes(config)});
+  const request = ingestionRequestSchema(config,document);
+  const listOf = items => ({type:'array',items});
+  const parsed = listOf(documentSchema(data.parsed));
+  const chunks = listOf(documentSchema(data.chunkFields,{chunk:true}));
+  const embedded = listOf(documentSchema(data.fields,{chunk:true,vectors:data.vectorBindings}));
+  const binding = clone(fixture.schemas.index_binding);
+  delete binding.$id;
+  const selected = indexVectorNames(config).filter(name => Object.hasOwn(data.vectorBindings,name));
+  const bindingEntry = binding.$defs.VectorIndexBinding;
+  binding.properties.vector_bindings = objectShape(Object.fromEntries(selected.map(name => {
+    const shape = clone(bindingEntry);
+    for (const [key,value] of Object.entries(data.vectorBindings[name])) {
+      if (value !== undefined && shape.properties[key]) shape.properties[key].const = value;
+    }
+    return [name,shape];
+  })),selected);
+  for (const [key,flag] of [['fulltext_fields','searchable'],['filter_fields','filterable']]) {
+    const names = Object.entries(data.indexed).filter(([,field]) => field[flag]).map(([name]) => 'structdata.' + name);
+    binding.properties[key].items = names.length ? {enum:names} : false;
+  }
+  const contexts = clone(fixture.schemas.query_context);
+  delete contexts.$id;
+  contexts.items.properties.result_sets.items.properties.items.items.properties.data =
+    documentSchema(data.indexed,{chunk:true});
+  // Retrieved candidates may carry vectors; when present they use the effective declarations.
+  const candidate = contexts.items.properties.result_sets.items.properties.items.items.properties.data;
+  candidate.properties.vectors = clone(embedded.items.properties.vectors);
+  candidate.properties.vectors.required = [];
+  const inference = clone(fixture.schemas.inference_request);
+  delete inference.$id;
+  inference.$defs = contexts.$defs;
+  inference.properties.filters.$ref = '#/$defs/filters';
+  inference.properties.parameters = parameterPreview(config,'inference_input');
+  if (inference.properties.parameters.required?.length) inference.required.push('parameters');
+
+  return {
+    import:[request,document], parsing:[document,parsed], chunking:[parsed,chunks],
+    embedding:[chunks,embedded], indexing:[embedded,binding],
+    inference_input:[inference,contexts], query_transformation:[contexts,contexts],
+    retrieval:[contexts,contexts], rerank:[contexts,contexts]
+  };
+}
+
+function contractPreview(module,owner,item) {
+  const source = owner ?? module;
+  const start = descriptor(source,draft);
+  const end = start.component_id === 'remote_api' ? node(draft,source).through : source;
+  const inputType = start.component_id === 'remote_api' ? baseline[source].io.input : start.io?.input ?? baseline[source].io.input;
+  const outputType = baseline[end].io.output;
+  const hints = item.ui_hints?.previews;
+  const range = start.component_id === 'remote_api' ? '<p>Remote API · ' + labels[source] + (end === source ? '' : ' → ' + labels[end]) + '</p>' : '';
+  return `<details ${hints?.effective_io?.collapsed === false ? 'open' : ''}><summary>有效輸入／輸出規格</summary>
+    ${range}<h4>輸入 · ${inputType}</h4><pre data-contract-preview="input" data-module="${source}"></pre>
+    <h4>輸出 · ${outputType}</h4><pre data-contract-preview="output" data-module="${end}"></pre></details>
+    ${hints?.ingestion_request ? `<details ${hints.ingestion_request.collapsed === false ? 'open' : ''}><summary>Ingestion 入口 JSON Schema 與 Request 範例</summary>
+    <h4>入口 JSON Schema</h4><pre data-contract-preview="input" data-module="import"></pre>
+    <h4>Request 範例</h4><p><code>POST /v1/ingestions</code></p><pre data-contract-preview="request"></pre></details>` : ''}`;
+}
+
+function refreshContractPreviews() {
+  const elements = $('page').querySelectorAll('[data-contract-preview]');
+  if (!elements.length) return;
+  const contracts = effectiveContracts(draft);
+  const composition = $('page').querySelector('[data-composition-error]');
+  if (composition) composition.textContent = compositionProblem(params(draft,'embedding'),derive(draft).chunkFields);
+  for (const element of elements) {
+    const kind = element.dataset.contractPreview;
+    element.textContent = json(kind === 'request' ? ingestionExample(contracts.import[0])
+      : contracts[element.dataset.module][kind === 'input' ? 0 : 1]);
+  }
+}
+
+function secretSettings(config) {
+  return `<div class="field"><h4>Secret</h4>
+    <p class="muted">各模組可用 <code>{{KEYNAME}}</code>。一般參數優先取 Request 值，認證欄位取 System Secret。測試值保存在本頁記憶體，下載只保留 Key。</p>
+    <div class="table-wrap"><table><thead><tr><th>Key</th><th>DEV 測試值</th><th></th></tr></thead>
+    <tbody>${Object.entries(config.secret ?? {}).map(([key,value]) => `<tr>
+      <td><input class="control" data-secret-key="${escapeHTML(key)}" aria-label="Secret Key" value="${escapeHTML(key)}"></td>
+      <td><input class="control" type="password" autocomplete="off" data-secret-value="${escapeHTML(key)}" aria-label="${escapeHTML(key)} DEV 測試值" value="${escapeHTML(value)}"></td>
+      <td><button class="btn small" data-action="remove-secret" data-value="${escapeHTML(key)}">移除</button></td>
+    </tr>`).join('')}</tbody></table></div>
+    <div>${makeButton('新增 Secret','add-secret','small')}</div>
+  </div>`;
 }
 
 function settings(system) {
-  const item = descriptor(selected,draft);
-  const values = params(draft,selected);
-  const properties = Object.entries(item.parameters_schema.properties).filter(([key]) => fieldVisible(key,values));
-  const advanced = new Set(item.ui_hints?.advanced?.map(path => path.slice(1)) ?? []);
-  const renderFields = entries => entries.map(([key,schema]) => renderField(key,schema,values[key])).join('');
+  const isOtherSettings = selected === 'other_settings';
+  const module = isOtherSettings ? 'import' : selected;
+  const item = descriptor(module,draft);
+  const values = params(draft,module);
+  const schemas = item.parameters_schema.properties;
+  const hints = item.ui_hints ?? {};
+  const groups = hints.groups ?? [];
+  const grouped = new Set(groups.flatMap(group => group.fields.map(path => path.slice(1))));
+  const order = [...new Set([...(hints.order ?? []).map(path => path.slice(1)),...Object.keys(schemas)])];
+  const properties = order.filter(key => schemas[key] && !grouped.has(key) && fieldVisible(item,key,values));
+  const advanced = new Set(hints.advanced?.map(path => path.slice(1)) ?? []);
+  const advancedFields = properties.filter(key => advanced.has(key));
+  const showFixedFilters = hints.fixed_filters === 'advanced';
+  const advancedIssue = issues.some(issue => issue.module === selected && (
+    showFixedFilters && issue.path === '/config/pipelines/inference/fixed_filters'
+    || advancedFields.some(key => issue.path?.startsWith(prefix(selected) + '/' + key))));
+  const renderFields = keys => keys.map(key => renderField(key,schemas[key],values[key])).join('');
+  const componentChoices = choicesFor(module).filter(choice => module !== 'parsing' || parserChoiceAllowed(choice,draft));
+  const compatible = componentChoices.includes(item);
   const owners = {...remoteOwnership(draft,'ingestion'),...remoteOwnership(draft,'inference')};
   const owner = owners[selected];
   const nav = Object.entries(lanes).map(([lane,modules]) => `<section class="panel pipeline">
     <h3>${lane === 'ingestion' ? 'Ingestion' : 'Inference'}</h3><div class="module-line">${modules.map(module => {
       const component = descriptor(module,draft);
       const note = owners[module] ? labels[owners[module]] + ' Remote API'
-        : issues.some(issue => issue.module === module) ? '⚠ 待修正' : componentNames[component.component_id];
+        : issues.some(issue => issue.module === module) ? '⚠ 無法發布' : componentNames[component.component_id];
       return `<button class="module ${selected === module ? 'selected' : ''}" data-action="module" data-value="${module}"
         aria-label="${labels[module]}" aria-pressed="${selected === module}"><strong>${labels[module]}</strong><small>${note}</small></button>`;
     }).join('')}</div></section>`).join('');
@@ -601,20 +824,32 @@ function settings(system) {
       placeholder="例如：Maintenance Retrieval" value="${escapeHTML(draftName)}"></label>
     ${system === pendingSystem ? '<label class="field">設定模板<select class="control"><option>Elasticsearch · 向量檢索</option></select></label>' : ''}
     </div>
-    <div class="builder"><nav aria-label="模組">${nav}</nav><section class="panel">
+    <div class="builder"><nav aria-label="設定區域">${nav}
+    <section class="panel pipeline"><button class="module ${isOtherSettings ? 'selected' : ''}" data-action="module" data-value="other_settings"
+      aria-pressed="${isOtherSettings}"><strong>其他設定</strong><small>Secret</small></button></section></nav><section class="panel">
     <div class="bar flow-title"><h3>${labels[selected]}</h3><span class="muted">草稿 ${system.draftRevision}${draftDirty ? ' · 未保存' : ''}</span></div>
-    ${owner ? `<div class="info">由 <button class="quiet" data-action="module" data-value="${owner}">${labels[owner]} Remote API</button> 處理此模組。</div>` : `
+    ${isOtherSettings ? secretSettings(draft) : owner ? `<div class="info">由 <button class="quiet" data-action="module" data-value="${owner}">${labels[owner]} Remote API</button> 處理此模組。</div>` : `
       <label class="field">Component<select class="control" id="component-picker" aria-label="Component">
-        ${choicesFor(selected).map(choice => option(choice.component_id,componentNames[choice.component_id] + (choice.planned ? '（規劃中）' : ' · ' + choice.component_version),choice.component_id === item.component_id)).join('')}
+        ${compatible ? '' : '<option value="" selected disabled>請選擇適用的 Parser</option>'}
+        ${componentChoices.map(choice => option(choice.component_id,componentNames[choice.component_id],choice.component_id === item.component_id)).join('')}
       </select></label>
+      ${selected === 'parsing' && item.io?.content_media_types && compatible ? `<p class="muted">接受格式 ${escapeHTML(item.io.content_media_types.join('、'))}</p>` : ''}
       ${item.component_id === 'remote_api' ? remoteSettings(draft,selected) : `
         ${selected === 'retrieval' ? `<p class="info">索引：${componentNames[node(draft,'indexing').component_id]} · ${retrievalMode(values)}</p>` : ''}
-        <div class="form-grid">${renderFields(properties.filter(([key]) => !advanced.has(key)))}</div>
-        ${advanced.size ? `<details id="advanced" ${detailOpen || issues.some(issue => issue.module === selected && [...advanced].some(key => issue.path.startsWith(prefix(selected) + '/' + key))) ? 'open' : ''}><summary>進階設定</summary><div class="form-grid">${renderFields(properties.filter(([key]) => advanced.has(key)))}</div></details>` : ''}
-        ${selected === 'inference_input' ? filterEditor('fixed',draft) : ''}
+        ${groups.map(group => `<fieldset class="field"><legend>${escapeHTML(group.title)}</legend>
+          <div class="form-grid">${renderFields(group.fields.map(path => path.slice(1)).filter(key => fieldVisible(item,key,values)))}</div>
+          ${group.example ? analysisPanel('查看組合範例',group.example) : ''}
+          ${group.fields.includes('/compose_text') && values.compose_text ? '<small class="inline-error" data-composition-error></small>' : ''}</fieldset>`).join('')}
+        ${compatible ? `<div class="form-grid">${renderFields(properties.filter(key => !advanced.has(key)))}</div>
+        ${advancedFields.length || showFixedFilters ? `<details id="advanced" ${detailOpen || advancedIssue ? 'open' : ''}>
+          <summary>進階設定</summary><div class="form-grid">${renderFields(advancedFields)}</div>
+          ${showFixedFilters ? filterEditor('fixed',draft) : ''}</details>` : ''}` : ''}
+        ${selected === 'import' && importSource(draft) === 'content' && !parserChoiceAllowed(descriptor('parsing',draft),draft)
+          ? '<p class="info">請在 Parsing 選擇適用的檔案 Parser。</p>' : ''}
       `}
     `}
-    ${issues.length ? `<div class="info bad" role="alert"><strong>請修正設定</strong><ul>${issues.map(issue =>
+    ${isOtherSettings ? '' : contractPreview(selected,owner,item)}
+    ${issues.length ? `<div class="info bad" role="alert"><strong>無法發布</strong><ul>${issues.map(issue =>
       `<li><button class="quiet" data-action="module" data-value="${issue.module}">${labels[issue.module]}</button> · ${escapeHTML(issue.message)}</li>`).join('')}</ul></div>` : ''}
   </section></div>`;
 }
@@ -626,8 +861,11 @@ function retrievalMode(values) {
 }
 
 function searchRouteCount(values) {
-  return new Set([values.vector_name,...(values.vector_fields ?? [])].filter(Boolean)).size
-    + new Set((values.fulltext_fields ?? []).filter(Boolean)).size;
+  return selectedItemCount([values.vector_name,...(values.vector_fields ?? [])]) + selectedItemCount(values.fulltext_fields);
+}
+
+function selectedItemCount(values) {
+  return new Set((values ?? []).filter(value => typeof value === 'string' && value.trim())).size;
 }
 
 function renderField(key, schema, value) {
@@ -635,51 +873,98 @@ function renderField(key, schema, value) {
   const path = prefix(selected) + '/' + key;
   const error = issues.find(issue => issue.path === path);
   const feedback = error ? `<span class="inline-error">${escapeHTML(error.message)}</span>` : '';
-  if (key === 'structdata') return importFields(value);
-  if (key === 'structdata_overrides') return indexFields(value);
+  const item = descriptor(selected,draft);
+  const editor = item.ui_hints?.controls?.['/' + key];
+  if (editor === 'structdata_editor') return importFields(key,value ?? {});
+  if (editor === 'structdata_overrides_editor') return indexFields(key,value ?? {});
+  if (editor === 'vector_checklist') return indexVectorFields();
   if (schema.type === 'array') {
+    const canRemove = !item.parameters_schema.required.includes(key) || (value?.length ?? 0) > (schema.minItems ?? 0);
     const rows = (value ?? []).map((entry,index) => `<tr>${schema.items.type === 'object' ? Object.entries(schema.items.properties).map(([sub,shape]) => {
       const attrs = `data-param="${key}" data-row="${index}" data-column="${sub}" aria-label="${title} ${index+1}：${shape.title || labels[sub] || sub}"`;
       return `<td>${renderControl(shape,entry[sub],attrs,'/' + key + '/*/' + sub)}</td>`;
     }).join('') : `<td>${renderControl(schema.items,entry,`data-param="${key}" data-row="${index}" aria-label="${title}"`,'/' + key + '/*')}</td>`}
-    <td><button class="btn small" data-action="remove-item" data-value="${key}" data-index="${index}" aria-label="移除此項">移除</button></td></tr>`).join('');
+    <td><button class="btn small" data-action="remove-item" data-value="${key}" data-index="${index}" aria-label="移除此項" ${canRemove ? '' : 'disabled'}>移除</button></td></tr>`).join('');
     const headings = schema.items.type === 'object' ? Object.entries(schema.items.properties).map(([sub,shape]) => `<th>${shape.title || labels[sub] || sub}</th>`).join('') : '<th>欄位</th>';
     return `<div class="field wide"><strong>${title}</strong>${rows ? `<div class="table-wrap"><table><thead><tr>${headings}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : ''}
       ${feedback}<div><button class="btn small" data-action="add-item" data-value="${key}">＋ 新增</button></div></div>`;
   }
   const attrs = `data-param="${key}" aria-label="${title}"`;
-  return `<label class="field ${schema.multiline ? 'wide' : ''}">${title}${renderControl(schema,value,attrs,'/' + key,Boolean(error))}${feedback}</label>`;
+  const description = schema.description ? `<small class="muted">${escapeHTML(schema.description)}</small>` : '';
+  const control = renderControl(schema,value,attrs,'/' + key,Boolean(error));
+  return `<label class="field ${editor === 'textarea' ? 'wide' : ''}">${title}${control}${description}${feedback}</label>`;
 }
 
 function renderControl(schema,value,attrs,path,invalid = false) {
-  const choices = optionValues(draft,selected,path) ?? schema.enum;
-  if (choices) return selectField(value,choices,attrs);
+  if (Object.hasOwn(schema,'const')) {
+    const fixed = typeof schema.const === 'string' ? schema.const : JSON.stringify(schema.const);
+    return `<input class="control" ${attrs} value="${escapeHTML(fixed)}" readonly>`;
+  }
+  value ??= schema.default;
+  const choices = optionValues(draft,selected,path);
+  if (choices) {
+    const source = descriptor(selected,draft).option_sources[path].source;
+    const available = schema.enum ? choices.filter(choice => schema.enum.includes(choice)) : choices;
+    return selectField(value,available,attrs,resources[source]);
+  }
+  if (schema.enum) {
+    const typed = schema.enum.some(choice => typeof choice !== 'string');
+    const encode = choice => typed ? JSON.stringify(choice) : choice;
+    const available = schema.enum.includes(value);
+    return `<select class="control" ${attrs} ${typed ? 'data-typed-option' : ''}
+      aria-invalid="${value != null && !available}">
+      ${available ? '' : option('',value == null ? '請選擇' : value + '（已失效）',true)}
+      ${schema.enum.map(choice => option(encode(choice),Object.hasOwn(displayNames,choice) ? displayNames[choice] : choice,choice === value)).join('')}</select>`;
+  }
   if (schema.type === 'boolean') return `<input type="checkbox" class="check" ${attrs} ${value ? 'checked' : ''}>`;
-  if (schema.multiline) return `<textarea class="control" ${attrs} rows="4">${escapeHTML(value)}</textarea>`;
-  const type = schema.type === 'integer' ? 'number' : 'text';
-  return `<input ${attrs} class="control" type="${type}" ${schema.minimum === undefined ? '' : 'min="' + schema.minimum + '"'} value="${escapeHTML(value)}" aria-invalid="${invalid}">`;
+  if (descriptor(selected,draft).ui_hints?.controls?.[path] === 'textarea') {
+    return `<textarea class="control" ${attrs} rows="4">${escapeHTML(value)}</textarea>`;
+  }
+  const numeric = schema.type === 'integer' || schema.type === 'number';
+  const bounds = numeric
+    ? [['min',schema.minimum],['max',schema.maximum],['step',schema.type === 'integer' ? 1 : 'any']]
+    : [['minlength',schema.minLength],['maxlength',schema.maxLength]];
+  const limits = bounds.filter(([,limit]) => limit !== undefined)
+    .map(([name,limit]) => `${name}="${escapeHTML(limit)}"`).join(' ');
+  return `<input ${attrs} class="control" type="${numeric ? 'number' : 'text'}" ${limits} value="${escapeHTML(value)}" aria-invalid="${invalid}">`;
 }
 
-function importFields(fields) {
+function importFields(key,fields) {
   return `<div class="field wide"><strong>文件欄位</strong><div class="table-wrap"><table><thead><tr><th>欄位</th><th>型別</th><th>必填</th><th>全文</th><th>Filter</th><th></th></tr></thead><tbody>${Object.entries(fields).map(([name,data]) => {
-    const attrs = `data-field="${escapeHTML(name)}"`;
+    const attrs = `data-editor-param="${escapeHTML(key)}" data-field="${escapeHTML(name)}"`;
     const flag = (key, label) => `<input type="checkbox" class="check" ${attrs} data-property="${key}" aria-label="${escapeHTML(name)} ${label}" ${data[key] ? 'checked' : ''}>`;
     return `<tr><td><input class="control" ${attrs} data-property="name" aria-label="${escapeHTML(name)} 欄位名稱" value="${escapeHTML(name)}"></td>
       <td><select class="control" ${attrs} data-property="type" aria-label="${escapeHTML(name)} 型別">${types.map(type => option(type,type,data.type === type)).join('')}</select></td>
       <td>${flag('required','必填')}</td><td>${flag('searchable','全文')}</td><td>${flag('filterable','Filter')}</td>
-      <td><button class="btn small" data-action="remove-field" data-value="${escapeHTML(name)}" aria-label="移除 ${escapeHTML(name)}">移除</button></td></tr>`;
-  }).join('')}</tbody></table></div><div>${makeButton('＋ 新增欄位','add-field','small')}</div></div>`;
+      <td><button class="btn small" data-action="remove-field" data-editor-param="${escapeHTML(key)}" data-value="${escapeHTML(name)}" aria-label="移除 ${escapeHTML(name)}">移除</button></td></tr>`;
+  }).join('')}</tbody></table></div><div><button class="btn small" data-action="add-field" data-editor-param="${escapeHTML(key)}">＋ 新增欄位</button></div></div>`;
 }
 
-function indexFields(overrides) {
+function indexFields(parameter,overrides) {
   const {fields} = derive(draft);
   const choices = [[undefined,'沿用'],[true,'啟用'],[false,'停用']];
   return `<div class="field wide"><strong>索引欄位用途</strong><div class="table-wrap"><table><thead><tr><th>欄位</th><th>型別</th><th>全文</th><th>Filter</th></tr></thead><tbody>
   ${[...new Set([...Object.keys(fields),...Object.keys(overrides)])].map(key => {
-    const control = (flag, label) => `<select class="control" data-index-field="${escapeHTML(key)}" data-property="${flag}" aria-label="${escapeHTML(key)} ${label}">${choices.map(([value,title]) =>
+    const control = (flag, label) => `<select class="control" data-editor-param="${escapeHTML(parameter)}" data-index-field="${escapeHTML(key)}" data-property="${flag}" aria-label="${escapeHTML(key)} ${label}">${choices.map(([value,title]) =>
       option(value === undefined ? '' : String(value),title + (value === undefined && fields[key]?.[flag] ? '（啟用）' : ''),overrides[key]?.[flag] === value)).join('')}</select>`;
     return `<tr><td>${escapeHTML(key)}</td><td>${fields[key]?.type ?? '<span class="inline-error">已失效</span>'}</td><td>${control('searchable','全文')}</td><td>${control('filterable','Filter')}</td></tr>`;
   }).join('')}</tbody></table></div></div>`;
+}
+
+function indexVectorFields() {
+  const {vector,vectorBindings} = derive(draft);
+  const selected = indexVectorNames(draft);
+  const names = [...new Set([...vector,...selected])];
+  return `<div class="field wide"><strong>向量欄位用途</strong>
+    <small class="muted">勾選要建立向量索引的 Embedding 輸出。Retrieval 可選用已建立索引的欄位。</small>
+    ${names.length ? `<div class="table-wrap"><table><thead><tr><th>向量欄位</th><th>來源欄位</th><th>Embedding Profile</th><th>建立向量索引</th></tr></thead>
+    <tbody>${names.map(name => {
+      const binding = vectorBindings[name];
+      return `<tr><td>${escapeHTML(name)}${binding ? '' : ' <span class="inline-error">已失效</span>'}</td>
+      <td>${escapeHTML(binding?.source_field ?? '—')}</td><td>${escapeHTML(binding?.embedding_profile_id ?? '—')}</td>
+      <td><input type="checkbox" class="check" data-index-vector="${escapeHTML(name)}"
+        aria-label="${escapeHTML(name)} 建立向量索引" ${selected.includes(name) ? 'checked' : ''}></td></tr>`;
+    }).join('')}</tbody></table></div>` : '<p class="muted">上游尚未宣告向量欄位。</p>'}</div>`;
 }
 
 function markDirty() {
@@ -688,6 +973,7 @@ function markDirty() {
   issues = [];
   const revision = $('page').querySelector('.flow-title .muted');
   if (revision) revision.textContent = '草稿 ' + current().draftRevision + ' · 未保存';
+  refreshContractPreviews();
 }
 
 function saveDraft(system) {
@@ -802,10 +1088,11 @@ function configIssues(config) {
     for (const [key,shape] of Object.entries(spec.properties)) {
       const value = values[key];
       if (value === undefined && !spec.required.includes(key)) continue;
-      const title = labels[key] || key;
+      const title = shape.title || labels[key] || key;
       if (shape.type === 'string' && (typeof value !== 'string' || !value.trim())) add(module,key,title + '為必填。');
       if (shape.type === 'integer' && (!Number.isSafeInteger(value) || value < shape.minimum)) add(module,key,title + '須為不小於 ' + shape.minimum + ' 的整數。');
-      const choices = optionValues(config,module,'/' + key);
+      const selectorPath = module === 'embedding' && key === 'source_field' ? '/mappings/*/source_field' : '/' + key;
+      const choices = optionValues(config,module,selectorPath);
       if (choices && value && !choices.includes(value)) add(module,key,title + '「' + value + '」已失效，請重新選擇。');
       if (shape.type === 'array' && Array.isArray(value)) {
         const allowed = optionValues(config,module,'/' + key + '/*');
@@ -813,6 +1100,7 @@ function configIssues(config) {
       }
     }
   }
+  if (!searchRouteCount(params(config,'retrieval'))) add('retrieval','vector_fields','請至少選擇一個向量欄位或全文欄位。');
   for (const [key,value] of Object.entries(input)) {
     if (!fieldName.test(key)) add('import','structdata','欄位「' + key + '」格式無效。');
     if (value.searchable && value.type !== 'string') add('import','structdata','只有字串欄位可做全文搜尋：' + key);
@@ -846,11 +1134,20 @@ function indexImpact(system, config) {
 
 function checkPublish(system) {
   if (!hasDraftName()) return;
-  issues = Object.values(lanes).flat().filter(module => needsMoreRuntime(module,draft)).map(module => ({
-    module, message:'此 Component 或設定尚未接入 W1 Runtime，可先保存草稿。'
+  issues = Object.values(lanes).flat().filter(module => outsideW1Preview(module,draft)).map(module => ({
+    module, message:'目前 Prototype 的 W1 模擬範圍未涵蓋此 Component 或設定。可先保存草稿。'
   }));
+  for (const [key,value] of Object.entries(draft.secret ?? {})) {
+    if (value === null) issues.push({module:'other_settings',message:'請補填 DEV 測試值：' + key});
+  }
   const effective = clone(draft);
   if (!issues.length) {
+    // Normalize single-field settings to the W1 simulation's original config shape.
+    Object.assign(params(effective,'embedding'),embeddingMappings(params(draft,'embedding'))[0]);
+    params(effective,'indexing').vector_name = indexVectorNames(draft)[0];
+    const retrieval = params(effective,'retrieval');
+    delete retrieval.fusion;
+    delete retrieval.rrf_k;
     // The draft also stores inactive options so switching between methods is reversible.
     for (const module of Object.values(lanes).flat()) {
       const properties = baseline[module].parameters_schema.properties;
@@ -1001,7 +1298,7 @@ function mapCSV(config) {
     for (const [target,spec] of targets) {
       if (!mapping[target]) continue;
       const text = row[csv.headers.indexOf(mapping[target])];
-      if (!text.trim() && !spec.required) continue;
+      if (!text.trim() && !spec.required && target !== 'source_revision') continue;
       let value = text;
       if (['number','integer','boolean','string_array','object'].includes(spec.type)) {
         try { value = JSON.parse(text); }
@@ -1031,7 +1328,7 @@ function checkBatch(batch, config) {
     if (seen.has(doc.document_id)) throw Error(display + '重複。');
     seen.add(doc.document_id);
     if (Object.keys(doc).some(key => !['document_id','source_revision','structdata','metadata'].includes(key))) throw Error(display + '含此 JSON 入口未支援的欄位。');
-    if (Object.hasOwn(doc,'source_revision') && (typeof doc.source_revision !== 'string' || !doc.source_revision.trim())) throw Error(display + '的 source_revision 須為非空字串。');
+    if (Object.hasOwn(doc,'source_revision') && doc.source_revision !== null && typeof doc.source_revision !== 'string') throw Error(display + '的 source_revision 須為字串或 null。');
     if (Object.hasOwn(doc,'metadata')) record(doc.metadata,'metadata');
     const fields = record(doc.structdata,display + '的 structdata');
     for (const key of Object.keys(fields)) if (!Object.hasOwn(specs,key)) throw Error(display + '的 ' + key + ' 未在 Import 宣告。');
@@ -1089,7 +1386,7 @@ function pollRuns() {
         for (const item of run.documents) item.status = next;
         if (next === 'completed') {
           const newDocs = new Map(system.documents.map(doc => [doc.document_id,doc]));
-          for (const doc of run.payload) newDocs.set(doc.document_id,{...doc,source_revision:doc.source_revision ?? run.run_id});
+          for (const doc of run.payload) newDocs.set(doc.document_id,{...doc});
           system.documents = [...newDocs.values()];
           system.initialized = true;
           delete run.payload;
@@ -1132,7 +1429,7 @@ function inference(system) {
     ${queryResult ? `<section class="panel" aria-label="查詢結果"><div class="bar"><h2>檢索結果</h2><small>${queryResult.revision} · ${items.length} 筆結果</small></div>
       ${items.length ? items.map(({data,score},index) => `<article class="result"><div class="bar"><h3>${index+1}. ${escapeHTML(data.structdata.title ?? data.document_id)}</h3>
         ${score === undefined ? '' : badge(score.toFixed(3))}</div><p>${escapeHTML(data.structdata[params(system.active,'embedding').source_field])}</p>
-        <small>來源 ${escapeHTML(data.document_id)} · ${escapeHTML(data.source_revision)}</small></article>`).join('') : '<p class="empty">沒有符合條件的結果。</p>'}
+        <small>來源 ${escapeHTML(data.document_id)}${data.source_revision ? ' · ' + escapeHTML(data.source_revision) : ''}</small></article>`).join('') : '<p class="empty">沒有符合條件的結果。</p>'}
       ${analysisPanel('查看回應 JSON',queryResult.contexts)}</section>` : ''}</div>
     <aside class="panel"><h2>篩選設定</h2>
       ${fixed.length ? analysisPanel('固定 Filter · ' + fixed.length + ' 組',fixed) : '<p class="empty">尚無固定 Filter</p>'}
@@ -1178,28 +1475,33 @@ function query(system) {
     validateFilters(dynamic,system.active);
     const filters = [...(system.active.pipelines.inference.fixed_filters ?? []),...dynamic];
     const chunk = params(system.active,'chunking');
-    const embedding = params(system.active,'embedding');
     const retrieve = params(system.active,'retrieval');
+    const vectorName = retrieve.vector_fields?.[0] ?? retrieve.vector_name;
+    const binding = derive(system.active).vectorBindings[vectorName];
+    if (!binding) throw Error('查詢向量欄位缺少索引綁定。');
     const terms = tokens(question);
     const candidates = system.documents.flatMap(doc => {
       const source = doc.structdata[chunk.split_field];
       const fields = Object.fromEntries([[chunk.output_field,source],...chunk.copy_fields.filter(row => Object.hasOwn(doc.structdata,row.source_field)).map(row => [row.output_field,doc.structdata[row.source_field]])]);
       if (!matchFilters(fields,filters,system.active)) return [];
-      const words = tokens(fields[embedding.source_field]);
+      const words = tokens(fields[binding.source_field]);
       const hits = [...terms].filter(term => words.has(term)).length;
       if (!hits) return [];
-      const data = {document_id:doc.document_id,source_revision:doc.source_revision,data_id:doc.document_id + '-1',structdata:fields};
+      const data = {document_id:doc.document_id,data_id:doc.document_id + '-1',structdata:fields};
+      if (Object.hasOwn(doc,'source_revision')) data.source_revision = doc.source_revision;
       if (doc.metadata) data.metadata = doc.metadata;
       return [{data,score:hits/terms.size}];
-    }).sort((left,right) => right.score - left.score);
+    }).sort((left,right) => right.score - left.score).slice(0,retrieve.per_route_k);
     const seen = new Set();
     const items = candidates.filter(({data}) => {
       if (!retrieve.group_by?.length) return true;
-      const key = json(retrieve.group_by.map(field => field === 'document_id' ? data.document_id : data.structdata[field.slice(11)]));
+      const values = retrieve.group_by.map(field => field === 'document_id' ? data.document_id : data.structdata[field.slice(11)]);
+      if (values.some(value => value == null)) return true;
+      const key = json(values);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).slice(0,retrieve.per_route_k);
+    }).slice(0,retrieve.top_n);
     queryResult = {revision:activeRevision(system),contexts:[{ori_query:question,query:question,filters,result_sets:[{key:'retrieval',items}],metadata:{}}]};
     queryError = '';
   } catch (error) {
@@ -1235,7 +1537,7 @@ async function readUpload(file) {
 }
 
 function download(system) {
-  const file = new Blob([json({system_id:system.id,config_revision:activeRevision(system),config:system.active}) + '\n'],{type:'application/json'});
+  const file = new Blob([json({system_id:system.id,config_revision:activeRevision(system),config:withoutSecretValues(system.active)}) + '\n'],{type:'application/json'});
   const url = URL.createObjectURL(file);
   const link = document.createElement('a');
   link.href = url;
@@ -1297,14 +1599,22 @@ document.addEventListener('click',event => {
     case 'validate': checkPublish(system); return;
     case 'publish': applyPublish(system); return;
     case 'download': download(system); return;
+    case 'add-secret': {
+      const values = draft.secret ??= {};
+      let number = 1;
+      while (Object.hasOwn(values,'SECRET_' + number)) number++;
+      values['SECRET_' + number] = null;
+      break;
+    }
+    case 'remove-secret': delete draft.secret[value]; break;
     case 'add-field': {
-      const fields = params(draft,'import').structdata;
+      const fields = params(draft,selected)[button.dataset.editorParam] ??= {};
       let number = 1;
       while (Object.hasOwn(fields,'field_' + number)) number++;
       fields['field_' + number] = {type:'string',required:false};
       break;
     }
-    case 'remove-field': delete params(draft,'import').structdata[value]; break;
+    case 'remove-field': delete params(draft,selected)[button.dataset.editorParam][value]; break;
     case 'add-filter': {
       const fields = filterFields(value === 'fixed' ? draft : system.active);
       const field = Object.keys(fields)[0];
@@ -1325,7 +1635,8 @@ document.addEventListener('click',event => {
     case 'add-item': {
       const parameters = params(draft,selected);
       const shape = descriptor(selected,draft).parameters_schema.properties[value].items;
-      const initial = field => field.enum?.[0] ?? (field.type === 'boolean' ? false : field.minimum ?? '');
+      const initial = field => field.const ?? field.default ?? field.enum?.[0]
+        ?? (field.type === 'boolean' ? false : field.minimum ?? '');
       (parameters[value] ??= []).push(shape.type === 'object'
         ? Object.fromEntries(Object.entries(shape.properties).map(([key,field]) => [key,initial(field)]))
         : initial(shape));
@@ -1333,8 +1644,10 @@ document.addEventListener('click',event => {
     }
     case 'remove-item': {
       const parameters = params(draft,selected);
+      const schema = descriptor(selected,draft).parameters_schema;
+      if (schema.required.includes(value) && parameters[value].length <= (schema.properties[value].minItems ?? 0)) return;
       parameters[value].splice(Number(index),1);
-      if (!parameters[value].length && !descriptor(selected,draft).parameters_schema.required.includes(value)) delete parameters[value];
+      if (!parameters[value].length && !schema.required.includes(value)) delete parameters[value];
       break;
     }
     case 'ingest-sample': uploadRevision++; csv = null; ingestText = json(fixture.ingestion); ingestError = ''; batchPreview = null; render(); return;
@@ -1351,12 +1664,21 @@ document.addEventListener('click',event => {
 });
 
 function changeParameter(input) {
+  if (input.readOnly) return;
   const {param,row,column} = input.dataset;
   const values = params(draft,selected);
-  const value = input.type === 'checkbox' ? input.checked : input.type === 'number' ? (input.value ? Number(input.value) : null) : input.value;
-  if (row === undefined) values[param] = value;
+  let value = input.value;
+  if (input.type === 'checkbox') value = input.checked;
+  if (input.type === 'number') value = Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : null;
+  if (input.hasAttribute('data-typed-option')) value = input.value === '' ? undefined : JSON.parse(input.value);
+  if (selected === 'retrieval' && param === 'top_n' && value === null) delete values[param];
+  else if (row === undefined) values[param] = value;
   else if (column) values[param][Number(row)][column] = value;
   else values[param][Number(row)] = value;
+  if (param === 'compose_text' && value) {
+    const properties = descriptor('embedding',draft).parameters_schema.properties;
+    for (const name of ['composition_field','composition_template']) values[name] ??= properties[name].default;
+  }
   markDirty();
 }
 
@@ -1364,7 +1686,10 @@ function changeRemote(input) {
   const key = input.dataset.remote;
   const currentNode = node(draft,selected);
   if (key === 'service_ref' || key === 'through') currentNode[key] = input.value;
-  else if (key === 'parameters' || key === 'structdata' || key === 'vectors') {
+  else if (key === 'bearer_token') {
+    if (input.value) currentNode.auth = {bearer_token:input.value};
+    else delete currentNode.auth;
+  } else if (key === 'parameters' || key === 'structdata' || key === 'vectors') {
     let value;
     try { value = JSON.parse(input.value); }
     catch { value = input.value; }
@@ -1378,6 +1703,10 @@ document.addEventListener('input',event => {
   const input = event.target;
   if (input.id === 'system-name') {
     draftName = input.value;
+    markDirty();
+  }
+  if (input.dataset.secretValue !== undefined) {
+    draft.secret[input.dataset.secretValue] = input.value;
     markDirty();
   }
   if (input.dataset.param !== undefined) changeParameter(input);
@@ -1399,6 +1728,20 @@ document.addEventListener('input',event => {
 
 document.addEventListener('change',event => {
   const input = event.target;
+  if (input.dataset.secretKey !== undefined) {
+    const previous = input.dataset.secretKey;
+    const next = input.value.trim();
+    if (previous === next) return;
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(next) || Object.hasOwn(draft.secret,next)) {
+      input.value = previous;
+      notify('Secret Key 格式不符或已存在。');
+      return;
+    }
+    draft.secret = Object.fromEntries(Object.entries(draft.secret).map(([key,value]) => [key === previous ? next : key,value]));
+    markDirty();
+    render();
+    return;
+  }
   if (input.id === 'component-picker') {
     chooseComponent(input.value);
     return;
@@ -1408,8 +1751,12 @@ document.addEventListener('change',event => {
     render();
     return;
   }
-  if (['persistence','service_source','compose_text','fusion','include_original','count','vector_name','vector_fields','fulltext_fields'].includes(input.dataset.param)) {
-    if (selected === 'retrieval' || !['vector_fields','vector_name','fulltext_fields'].includes(input.dataset.param)) render();
+  if (input.dataset.param !== undefined) {
+    const target = '/' + input.dataset.param;
+    const rules = Object.values(descriptor(selected,draft).ui_hints?.visible_when ?? {});
+    const affectsVisibility = rules.some(rule => (rule.all ?? rule.any ?? [])
+      .some(condition => condition.path === target || condition.paths?.includes(target)));
+    if (affectsVisibility || selected === 'import' && target === '/source') render();
   }
   if (input.dataset.filter) {
     const {filter,filterKey,index} = input.dataset;
@@ -1431,9 +1778,9 @@ document.addEventListener('change',event => {
     writeFilters(filter,filters,filterKey !== 'value');
     return;
   }
-  const {field,indexField,property} = input.dataset;
+  const {field,indexField,property,editorParam} = input.dataset;
   if (field !== undefined) {
-    const fields = params(draft,'import').structdata;
+    const fields = params(draft,selected)[editorParam];
     if (property === 'name') {
       const name = input.value.trim();
       if (name === field) return;
@@ -1442,7 +1789,7 @@ document.addEventListener('change',event => {
         notify('欄位名稱須合法且不可重複。');
         return;
       }
-      params(draft,'import').structdata = Object.fromEntries(Object.entries(fields).map(([key,entry]) => [key === field ? name : key,entry]));
+      params(draft,selected)[editorParam] = Object.fromEntries(Object.entries(fields).map(([key,entry]) => [key === field ? name : key,entry]));
       input.dataset.field = name;
       const row = input.closest('tr');
       row.querySelectorAll('[data-field]').forEach(element => { element.dataset.field = name; });
@@ -1451,7 +1798,7 @@ document.addEventListener('change',event => {
     markDirty();
   }
   if (indexField !== undefined) {
-    const overrides = params(draft,'indexing').structdata_overrides;
+    const overrides = params(draft,selected)[editorParam] ??= {};
     const value = {...(Object.hasOwn(overrides,indexField) ? overrides[indexField] : {})};
     if (input.value === '') delete value[property];
     else value[property] = input.value === 'true';
@@ -1460,6 +1807,16 @@ document.addEventListener('change',event => {
     markDirty();
   }
   if (input.id === 'upload' && input.files.length) readUpload(input.files[0]);
+  if (input.dataset.indexVector !== undefined) {
+    const name = input.dataset.indexVector;
+    const values = indexVectorNames(draft).filter(value => value !== name);
+    if (input.checked) values.push(name);
+    const index = params(draft,'indexing');
+    delete index.vector_name;
+    index.vector_fields = values;
+    markDirty();
+    refreshContractPreviews();
+  }
   if (input.dataset.mapping !== undefined) {
     mapping[input.dataset.mapping] = input.value;
     batchPreview = null;
@@ -1491,7 +1848,7 @@ if (!stored) {
     system.revision = 1;
     system.indexReady = true;
     system.initialized = ready;
-    system.documents = ready ? fixture.ingestion.documents.map(doc => ({...doc,source_revision:'source-1'})) : [];
+    system.documents = ready ? clone(fixture.ingestion.documents) : [];
     model.systems.push(system);
   }
   persist();

@@ -11,12 +11,14 @@ Elasticsearch 索引存取層另在每筆 ES Chunk 保存內部 `write_id`，同
 | 欄位 | 責任與語意 |
 |---|---|
 | `document_id` | 原始文件穩定識別。多頁、多切片保留原文件 ID。外部候選也需填可辨識來源的 ID。 |
-| `source_revision` | 來源版本，供追溯及文件摘要使用。入口可省略，Runtime 於下游使用已解析的版本。文件按同一 System 的 `document_id` 覆寫，`source_revision` 的值不影響是否接受覆寫。省略時的生成方式見 Q-007。 |
+| `source_revision` | 選填的來源文件版本。接受字串（含 `""`）與 `null`。匯入時有帶值，解析單位、Chunk 與檢索候選原樣保留。匯入時省略，下游維持省略。同一 System 以 `document_id` 判斷覆寫。文件清單只彙整非空版本字串。 |
 | `data_id` | 每筆可檢索 Document 的識別，Chunking 產出後必填。不同切片可共用 document_id，data_id 須能區分它們。去重使用 data_id，文件分組及刪除使用 document_id。 |
 | `structdata` | 平面業務欄位，依 [Data Meta Schema](#data-meta-schema) 宣告型別、必填性與搜尋能力。 |
 | `content` | 待解析來源，`media_type` 加 `uri` 或 `base64` 二選一。與已知 structdata 可並存。 |
 | `metadata` | 選填 JSON object，可含巢狀值。整包傳遞、儲存與回傳，子欄位不參與檢索、Filter、分組、文字處理或計算。選填的 `_rag` 可附帶平台追溯資訊。 |
 | `vectors` | 名稱到 DenseVector 的物件。每筆向量含 `values`、`embedding_profile_id`、`source_field`。 |
+
+共用外層只要求 `document_id`。Import 依設定決定是否要求 `content`、`structdata` 及其欄位。檢索候選額外必須提供 `data_id`、`structdata`，詳細欄位由有效 System Schema 決定。`content.media_type` 指定來源格式，`uri` 引用可取得的來源，`base64` 承載同一來源的編碼內容。
 
 <a id="data-flow"></a>
 ## 各階段有效 Schema
@@ -77,6 +79,14 @@ Chunking 逐 Unit 處理同一個選定欄位，可另外保留該欄位的原�
 
 [QueryContext[]](../schemas/query_context.schema.json) 是 Query Transformation、Retrieval、Rerank 的共用 I/O，也是 Runtime Inference 成功回應。每份 Context 有 `ori_query`、`query`、`filters`、`result_sets`、`metadata`。每個 ResultSet 以 `key` 表示搜尋路徑或群組，`items` 的順序代表排名。`ResultItem.data` 必填，值為候選 `Document`，`score` 選填。無命中時回空候選。
 
+| 欄位 | 建立與使用方式 |
+|---|---|
+| `ori_query` | Inference Input 帶入原始 `query`。改寫後的 Context 都保留它。 |
+| `query` | 此 Context 使用的實際查詢文字。未改寫時等於 `ori_query`。 |
+| `filters` | 已驗證並合併的固定與動態 Filter，沒有條件時為 `[]`。 |
+| `result_sets` | Inference Input 初始化為 `[]`，Retrieval 填入有序候選清單。內建 Retrieval 無命中仍保留一個 ResultSet，其 `items` 為 `[]`。 |
+| `metadata` | 沿用 Request 的 Query metadata，省略時為 `{}`。Document 自身的 metadata 仍放在候選裡。 |
+
 - Query Transformation 可產生多個 Context，保留原始問題、條件與 Query metadata。
 - 內建 Retrieval 對每個 Query 交付一份 ResultSet，多路搜尋先融合再交付，無命中時 items 為空。ResultSet key 在同一 Context 內唯一，同一清單的 data_id 唯一。
 - Rerank 對輸入候選評分、重排與裁切，保留候選識別與 Document。融合以 `data_id` 對齊候選；`group_by` 使用候選 Document 的選定欄位保留目前排名最高的代表。組合多節點的 Remote API 依區段邊界驗證。
@@ -88,6 +98,16 @@ Chunking 逐 Unit 處理同一個選定欄位，可另外保留該欄位的原�
 ## IndexBinding
 
 [IndexBinding](../schemas/index_binding.schema.json) 是平台管理索引的執行交接。第一版每個 System 至多一組平台邏輯索引。Indexing 提供格式、定位與能力，Engine 驗證綁定，內建 Retrieval 由執行環境取得。多個索引欄位與後端內部索引屬同一組綁定。
+
+| 欄位 | 必填 | 語意 |
+|---|---|---|
+| `artifact_type` | 是 | 指定受註冊的索引格式與版本，由 Engine 判斷 Retrieval 是否相容。 |
+| `target` | 依實作 | 供該索引實作定位實體資料的物件。欄位由對應 Adapter 定義。 |
+| `fulltext_fields` | 否 | 已綁定全文索引的欄位，以 `structdata.<欄位名>` 表示。 |
+| `filter_fields` | 否 | 已綁定過濾能力的欄位，採同一引用格式。 |
+| `vector_bindings` | 否 | 以向量名稱為 key，每筆包含 `source_field`、`embedding_profile_id`、`dimensions`。Retrieval 依此選擇相容的 Query Encoder。 |
+
+省略能力清單或映射時，編譯器視為空集合。有效 IndexBinding 仍須符合 System 的索引計畫與 Adapter 格式要求。可驗證的例子見 [Local Search IndexBinding](../examples/system_config/index_binding.example.json)。
 
 外部 Remote Retrieval 由服務管理其資料及搜尋，平台用 System Document Schema 驗證候選。平台的文件查詢、清單及刪除以平台所管理的資料為作用範圍。相關工作狀態與 API 見 [Runtime](06_runtime_api_and_deployment.md)。
 

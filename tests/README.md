@@ -6,10 +6,11 @@
 
 ```sh
 python3 examples/system_config/validate_descriptor_draft.py
+python3 examples/system_config/validate_runtime_http_examples.py
 python3 examples/user_remote_api/validate.py
 ```
 
-第一支驗證 `0.2-draft` 的 System Config、Descriptor、欄位推導、型別化 Filter 及索引相依。第二支驗證共用 Document、Ingestion、Inference 和 Remote API 測資。Runtime 的 HTTP、部署與搜尋需另做整合驗收。
+三支腳本分別驗證 System Config／Descriptor／Catalog、Runtime HTTP 範例及其跨步驟關聯，以及共用 Document 與 Remote API。DEV Runtime 的實際 HTTP、部署與搜尋由整合測試驗收。
 
 ## UI prototype 回歸
 
